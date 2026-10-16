@@ -5,3 +5,4 @@ pytest==8.3.5
 SQLAlchemy==2.0.40
 psycopg[binary]==3.2.6
 alembic==1.15.2
+PyJWT[crypto]==2.10.1
