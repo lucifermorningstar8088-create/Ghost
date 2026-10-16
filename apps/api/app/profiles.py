@@ -1,7 +1,7 @@
 """Persistence operations for channel profiles.
 
-These functions are internal building blocks. Do not expose them as unauthenticated
-HTTP routes; callers must derive tenant_id from an authenticated identity.
+These functions are internal building blocks. Callers must derive tenant_id from
+an authenticated identity before invoking them.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def create_profile(session: Session, data: dict[str, Any]) -> ChannelProfile:
         platform=data["platform"],
         display_name=data["display_name"],
         profile_version=data.get("profile_version", 1),
-        profile_data=data,
+        profile_data=data.get("profile_data", data),
     )
     session.add(profile)
     session.commit()
