@@ -78,7 +78,7 @@ def get_current_user(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication provider is not configured",
         ) from exc
-    except (PyJWTError, Exception) as exc:
+    except PyJWTError as exc:
         # Auth failures must never fall back to trusting client-supplied identity.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
