@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ghost/integration-profile.schema.json",
+  "title": "Ghost Integration Profile",
+  "description": "Non-secret configuration metadata for a provider connection. Secret values must be stored separately by the backend and never committed to config files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "capability", "provider", "status", "priority", "enabled"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{2,127}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "capability": {
+      "type": "string",
+      "enum": ["llm", "web_search", "image_generation", "video_generation", "tts", "stt", "storage", "social_platform", "telegram", "github", "database", "observability"]
+    },
+    "provider": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "status": { "enum": ["draft", "configured", "validated", "enabled", "degraded", "disabled"] },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "enabled": { "type": "boolean" },
+    "base_url": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "model": { "type": "string", "maxLength": 200 },
+    "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 600, "default": 60 },
+    "max_retries": { "type": "integer", "minimum": 0, "maximum": 8, "default": 2 },
+    "daily_budget": { "type": "number", "minimum": 0 },
+    "monthly_budget": { "type": "number", "minimum": 0 },
+    "allowed_tasks": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 100 } },
+    "secret_ref": { "type": "string", "description": "Opaque server-side secret reference; never put the secret itself here." },
+    "last_tested_at": { "type": "string", "format": "date-time" },
+    "last_health_check_at": { "type": "string", "format": "date-time" },
+    "fallback_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "notes": { "type": "string", "maxLength": 2000 }
+  }
+}
