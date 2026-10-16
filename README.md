@@ -57,3 +57,25 @@ The MagicPath-generated React/TypeScript UI is stored in `apps/web/src/component
 ### UI integration status
 
 This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. Backend API, secure secret storage, database migrations, OAuth callbacks, job events and real provider adapters remain separate implementation tasks. The current repository is specification-first and does not yet contain a complete web application scaffold.
+
+## Run the web UI locally
+
+The React/Vite shell mounts the Ghost Operations Center prototype. From the repository root:
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite (normally `http://localhost:5173`). To validate a production build:
+
+```bash
+npm run typecheck
+npm run build
+npm run preview
+```
+
+Copy `apps/web/.env.example` to `.env.local` only if you need to set a public API base URL. Never place provider secrets, Supabase service-role keys, OAuth client secrets, database passwords, or Telegram tokens in `VITE_*` variables.
+
+**Runtime boundary:** this makes the frontend shell runnable, not the platform production-ready. The current operations center uses seeded demo data and local component state. Login/OAuth, durable persistence, real provider health, worker queues/events, actual publishing, and Telegram delivery remain unimplemented until backend services are added and verified.
