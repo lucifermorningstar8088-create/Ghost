@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-from fastapi import HTTPException
-import pytest
+from jwt import PyJWKClientConnectionError
 
 from app.auth import AuthenticatedUser, get_current_user
 
@@ -29,6 +28,27 @@ def test_unconfigured_auth_fails_closed(monkeypatch):
     monkeypatch.setattr("app.auth.verify_access_token", unconfigured)
     response = client.get("/protected", headers={"Authorization": "Bearer test-token"})
     assert response.status_code == 503
+
+
+def test_jwks_provider_outage_returns_503(monkeypatch):
+    def provider_unavailable(_token):
+        raise PyJWKClientConnectionError("JWKS endpoint unavailable")
+
+    monkeypatch.setattr("app.auth.verify_access_token", provider_unavailable)
+    response = client.get("/protected", headers={"Authorization": "Bearer test-token"})
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Authentication provider is temporarily unavailable"
+
+
+def test_invalid_token_is_rejected(monkeypatch):
+    from jwt import InvalidTokenError
+
+    monkeypatch.setattr(
+        "app.auth.verify_access_token",
+        lambda _token: (_ for _ in ()).throw(InvalidTokenError("invalid token")),
+    )
+    response = client.get("/protected", headers={"Authorization": "Bearer test-token"})
+    assert response.status_code == 401
 
 
 def test_verified_claim_without_tenant_is_forbidden(monkeypatch):
