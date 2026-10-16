@@ -12,7 +12,9 @@ def test_liveness_reports_running_api() -> None:
     assert response.json() == {"status": "ok", "service": "ghost-api"}
 
 
-def test_readiness_does_not_claim_unconfigured_integrations_are_live() -> None:
+def test_readiness_reports_unconfigured_database_and_integrations(monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
     response = client.get("/health/ready")
 
     assert response.status_code == 200
@@ -23,3 +25,26 @@ def test_readiness_does_not_claim_unconfigured_integrations_are_live() -> None:
     assert payload["checks"]["social_platforms"] == "not_configured"
     assert payload["checks"]["provider_adapters"] == "not_configured"
     assert payload["checks"]["telegram"] == "not_configured"
+
+
+def test_readiness_checks_configured_database(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+
+    response = client.get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json()["checks"]["database"] == "ok"
+    assert response.json()["status"] == "degraded"
+
+
+def test_readiness_returns_503_when_configured_database_is_unavailable(monkeypatch) -> None:
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql+psycopg://ghost:wrong@127.0.0.1:1/ghost?connect_timeout=1",
+    )
+
+    response = client.get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json()["status"] == "unavailable"
+    assert response.json()["checks"]["database"] == "unavailable"
