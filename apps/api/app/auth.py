@@ -13,7 +13,7 @@ from typing import Any
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt import PyJWKClient, PyJWTError
+from jwt import PyJWKClient, PyJWKClientConnectionError, PyJWTError
 
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -77,6 +77,12 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication provider is not configured",
+        ) from exc
+    except PyJWKClientConnectionError as exc:
+        # A key-service outage is operational, not evidence that the user's token is invalid.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication provider is temporarily unavailable",
         ) from exc
     except PyJWTError as exc:
         # Auth failures must never fall back to trusting client-supplied identity.
