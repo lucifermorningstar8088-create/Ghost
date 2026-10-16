@@ -4,29 +4,33 @@ Ghost is an AI-powered social media growth and revenue operations platform in pl
 
 ## Skill library
 
-The repository contains a planned library of **200 specialist skill specifications**, organized as 25 domain packs under [skills/packs](skills/packs/) and indexed in [CATALOG.md](CATALOG.md). Each skill has a unique ID and a detailed mission, triggers, inputs/outputs, workflow, quality gates, failure handling, specialist prompt, evaluation cases, and runtime integration notes.
+The repository contains a planned library of **200 specialist skill specifications**, organized as 25 domain packs under [skills/packs](skills/packs/) and indexed in [CATALOG.md](CATALOG.md).
 
 ## Channel Customization Studio
 
-- [Studio specification](docs/CHANNEL-CUSTOMIZATION-STUDIO.md) defines channel/page dropdown selection, independent profiles, custom prompts, content-type builder, prompt preview, version history, test generation, job lifecycle, access control, and delivery phases.
-- [Channel profile JSON Schema](config/channel-profile.schema.json) defines the versioned channel/page configuration contract.
-- [Content type JSON Schema](config/content-type.schema.json) defines reusable, configurable content formats.
-- [Example channel profiles](config/channel-profiles.example.yaml) and [example content types](config/content-types.example.yaml) are illustrative fixtures, not connected accounts or active production settings.
-- [Channel customization acceptance matrix](tests/CHANNEL-CUSTOMIZATION-ACCEPTANCE.md) defines isolation, authorization, versioning, prompt precedence, failure, and publishing-boundary tests.
+- [Studio specification](docs/CHANNEL-CUSTOMIZATION-STUDIO.md) defines channel/page selection, independent profiles, custom prompts, content-type builder, prompt preview, version history, test generation, job lifecycle, access control, and delivery phases.
+- [Channel profile JSON Schema](config/channel-profile.schema.json) and [content-type JSON Schema](config/content-type.schema.json) define configuration contracts.
+- [Example profiles](config/channel-profiles.example.yaml) and [content types](config/content-types.example.yaml) are fixtures, not connected accounts or active production settings.
+- [Acceptance matrix](tests/CHANNEL-CUSTOMIZATION-ACCEPTANCE.md) defines isolation, authorization, versioning, prompt precedence, failure, and publishing-boundary tests.
 
-Design rule: system safety, permissions, platform policy, rights checks, and budget constraints cannot be overridden by channel prompts. Channel profiles and content types are isolated by default; one-time prompt overrides affect only the current job. Test generation must never publish.
+## Configurable database, APIs, providers, and Telegram
+
+- [Database and integration control-plane specification](docs/CONFIGURABLE-INTEGRATIONS-AND-DATABASE.md) defines the UI-first setup for **hosted Supabase or local PostgreSQL**, provider connections, multiple providers per capability, account/page binding, and Telegram job notifications.
+- [Integration profile schema](config/integration-profile.schema.json) defines non-secret provider metadata. Actual credentials must live in server-side encrypted secret storage, never in source control or browser storage.
+- Planned provider categories include LLM/text, web search, image generation, video generation, TTS, STT, storage, social platforms, Telegram, GitHub, database, and observability. Multiple instances per category are required, with explicit health, budget, priority, and fallback controls.
+- Telegram is intended for configurable notifications and a limited secure control surface; it is not a replacement for web-app authorization.
+- These are design contracts and schemas, **not proof that the UI, database adapters, provider integrations, or Telegram bot are implemented or connected**.
 
 ## Configuration validation and implementation backlog
 
-- [Consolidated implementation backlog](docs/IMPLEMENTATION-BACKLOG.md) separates completed specifications from the remaining API, UI, runtime, testing, and publishing work.
+- [Consolidated implementation backlog](docs/IMPLEMENTATION-BACKLOG.md) separates completed specifications from remaining API, UI, runtime, integration, testing, and publishing work.
 - [Configuration validation script](scripts/validate_configs.py) checks JSON Schemas, example YAML fixtures, cross-references, and the proposed tool registry.
-- [Development validation dependencies](requirements-dev.txt) and [GitHub Actions workflow](.github/workflows/validate-configs.yml) run those checks on pull requests and pushes. A successful run must be observed before claiming CI validation passed.
+- [Development validation dependencies](requirements-dev.txt) and [GitHub Actions workflow](.github/workflows/validate-configs.yml) run checks on pull requests and pushes.
 
 ## Tool coverage and reliability
 
-- [Tool coverage and fallback standard](docs/TOOL-COVERAGE-AND-FALLBACK.md) defines critical capabilities, primary routes, fallback routes, safe-stop behavior, security, and readiness gates.
-- [Machine-readable tool inventory](config/tools.yaml) lists proposed capability routes and implementation records.
-- Tool entries marked proposed are planning records, not proof of an installed, authenticated, tested, or production-ready integration.
+- [Tool coverage and fallback standard](docs/TOOL-COVERAGE-AND-FALLBACK.md) defines critical capabilities, primary/fallback/safe-stop routes, security, and readiness gates.
+- [Machine-readable tool inventory](config/tools.yaml) lists proposed capability routes. A proposed record is not proof of a live integration.
 
 ## Engineering standards
 
@@ -37,8 +41,4 @@ Design rule: system safety, permissions, platform policy, rights checks, and bud
 - No promises of virality, monetization approval, or guaranteed revenue.
 - Progressive tool discovery: load only the tools needed for a task rather than flooding every model call with every schema.
 
-## Validation and implementation
-
-See [quality gates](docs/QUALITY-GATES.md), [validation matrix](tests/VALIDATION-MATRIX.md), [skill engineering standard](docs/SKILL-ENGINEERING-STANDARD.md), and [integration roadmap](docs/INTEGRATION-ROADMAP.md).
-
-**Important:** skill, tool, and customization files currently define specifications and examples, not a fully implemented runtime or UI. Runtime adapters, database migrations, platform permissions, executable automated tests, end-to-end tests, fallback drills, and benchmarks must be implemented and verified before production claims.
+**Important:** skill, tool, and customization files currently define specifications and examples, not a fully implemented runtime or UI. Database migrations, runtime adapters, platform permissions, executable automated tests, fallback drills, and benchmarks must be implemented and verified before production claims.
