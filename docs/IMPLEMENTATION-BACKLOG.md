@@ -59,7 +59,29 @@ Ghost contains specialist-skill specifications, a proposed tool coverage registr
 - [ ] Implement unified jobs, integration health, cost/quota, and audit dashboard.
 - [ ] Telegram-triggered actions must be authenticated, allow-listed, permission-checked, and confirmed for destructive/publishing operations.
 
-### F. Runtime and content production
+### F. Worker orchestration and concurrent execution
+- [x] Define specialist worker roles, capability registration requirements, and safe authority boundaries.
+- [x] Specify concurrent job scheduling, dependency DAGs, durable queues, per-tenant/account/provider limits, fairness, checkpoints, cancellation, idempotency, retries, circuit breakers, and dead-letter handling.
+- [x] Specify truthful live metrics and runtime event visibility; demo data must be labeled.
+- [x] Add worker/concurrency/recovery acceptance matrix.
+- [ ] Implement typed job/task/worker/capability/event schemas and PostgreSQL migrations.
+- [ ] Implement durable queue, leases/heartbeats, concurrency controls, DAG orchestration, checkpoint/resume, cancellation, and dead-letter tooling.
+- [ ] Implement specialist worker adapters with typed inputs/outputs, capability allowlists, and resource limits.
+- [ ] Add live event streaming, worker health, queue age, retry, usage, and cost telemetry to the UI.
+- [ ] Pass concurrency, duplicate delivery, crash recovery, cancellation, fairness, isolation, and budget failure tests.
+
+### G. Community inbox and natural replies
+- [x] Specify authorized multi-platform comment inbox, context-aware reply generation, per-channel voice, classification, risk escalation, and send policy.
+- [x] Define human review, low-risk auto-send restrictions, immediate pause switch, audit requirements, and remote-state read-back.
+- [x] Add community and reply acceptance matrix.
+- [ ] Implement official-platform inbox sync, OAuth scopes, webhook verification, pagination, incremental sync, and duplicate suppression.
+- [ ] Implement comment intent/sentiment/risk classification with confidence thresholds and escalation.
+- [ ] Implement channel-specific natural reply generation with repetition checks and factual verification/evidence.
+- [ ] Implement draft/edit/approve/reject/escalate/send UI and server-side authorization.
+- [ ] Implement disabled-by-default low-risk auto-send, allowlists, rate limits, kill switch, audit log, and remote read-back.
+- [ ] Test sensitive-topic escalation, account switching, factual disputes, duplicate sync, send timeout, and reply idempotency.
+
+### H. Runtime and content production
 - [ ] Implement a runtime tool registry with provider contracts and evidence-based health states.
 - [ ] Implement planning/execution workflow, durable queue, checkpoints, cancellation, retry/resume where safe, and dead-letter/manual review.
 - [ ] Research/evidence ledger with freshness and source attribution.
@@ -69,7 +91,7 @@ Ghost contains specialist-skill specifications, a proposed tool coverage registr
 - [ ] Captions/transcription confidence gates and media integrity checks.
 - [ ] Human review queue and exportable draft package.
 
-### G. Security, testing, and deployment
+### I. Security, testing, and deployment
 - [ ] Server-side authorization on every profile, content type, asset, job, integration, account, secret, and history operation.
 - [ ] Secret scanning and dependency/security scanning in CI.
 - [ ] Schema, unit, integration, UI, end-to-end, and failure-injection tests.
