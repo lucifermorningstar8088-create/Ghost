@@ -128,6 +128,41 @@ capabilities:
     primary: scheduled_backup_and_restore_test
     fallback: secondary_export_destination
     safe_stop: alert_on_failed_backup
+  - id: channel_profile_management
+    priority: P0
+    primary: channel_profile_service
+    fallback: validated_profile_export
+    safe_stop: block_missing_or_unauthorized_profile
+  - id: prompt_assembly
+    priority: P0
+    primary: deterministic_prompt_assembler
+    fallback: versioned_template_renderer
+    safe_stop: reject_unresolved_policy_conflict
+  - id: content_type_management
+    priority: P1
+    primary: content_type_service
+    fallback: validated_content_type_template
+    safe_stop: block_unsupported_platform_format
+  - id: prompt_versioning
+    priority: P1
+    primary: immutable_profile_version_store
+    fallback: append_only_profile_export
+    safe_stop: never_overwrite_audit_history
+  - id: generation_quality_validation
+    priority: P0
+    primary: schema_and_media_quality_gates
+    fallback: independent_review_and_manual_check
+    safe_stop: mark_needs_review_not_success
+  - id: approval_workflow
+    priority: P0
+    primary: approval_state_machine
+    fallback: manual_approval_queue
+    safe_stop: block_external_publish_without_approval
+  - id: platform_capability_detection
+    priority: P1
+    primary: platform_capability_adapter
+    fallback: version_pinned_capability_cache
+    safe_stop: block_unsupported_settings
 
 implementations:
   # Configure these only after credentials, contracts, and tests are verified.
@@ -174,3 +209,31 @@ implementations:
     status: proposed
     secrets:
       - PLATFORM_OAUTH_CREDENTIAL_REFERENCE
+  - id: channel_profile_service
+    category: channel_customization
+    status: proposed
+    secrets: []
+  - id: deterministic_prompt_assembler
+    category: prompt_engineering
+    status: proposed
+    secrets: []
+  - id: content_type_service
+    category: content_customization
+    status: proposed
+    secrets: []
+  - id: immutable_profile_version_store
+    category: versioning
+    status: proposed
+    secrets: []
+  - id: schema_and_media_quality_gates
+    category: quality_validation
+    status: proposed
+    secrets: []
+  - id: approval_state_machine
+    category: approvals
+    status: proposed
+    secrets: []
+  - id: platform_capability_adapter
+    category: platform_compatibility
+    status: proposed
+    secrets: []
