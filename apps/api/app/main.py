@@ -6,11 +6,14 @@ are connected. Those capabilities will be reported only after real adapters exis
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from .profile_routes import router as profile_router
+
 app = FastAPI(
     title="Ghost API",
     description="Backend foundation for Ghost social media operations.",
     version="0.1.0",
 )
+app.include_router(profile_router)
 
 
 @app.get("/health/live", tags=["health"])
