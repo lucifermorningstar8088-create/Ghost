@@ -1,0 +1,86 @@
+# Illustrative fixtures only. Replace placeholder IDs with authorized account/profile IDs.
+# Do not place OAuth tokens, API keys, or personal account secrets here.
+schema_version: 1
+defaults:
+  profile_scope: connected_account
+  content_type_scope: channel_profile
+  prompt_override_scope: current_job_only
+  require_prompt_preview: true
+  test_generation_may_publish: false
+  require_human_approval_before_publish: true
+
+profiles:
+  - profile_id: "00000000-0000-4000-8000-000000000001"
+    tenant_id: "example-workspace"
+    connected_account_id: "authorized-account-reference-1"
+    platform: youtube
+    display_name: "Example Facts Channel"
+    status: draft
+    profile_version: 1
+    niche: "Facts and science explainers"
+    audience: "Hindi-speaking general audience"
+    language: "Hindi"
+    tone: "High-energy, clear, accurate, and easy to follow"
+    brand_guide: "Use original scripts. One central idea per video. Avoid confusing tangents."
+    visual_rules:
+      - "Use vertical 9:16 framing for Shorts."
+      - "Keep captions readable on a phone."
+      - "Do not imply generated visuals are documentary evidence."
+    voice_profile_ref: null
+    recurring_character_refs: []
+    default_output:
+      format: short_video
+      duration_seconds: 45
+      aspect_ratio: "9:16"
+      resolution: "1080x1920"
+      language_variant: "Hindi (India)"
+    research_rules:
+      - "Verify factual claims against reliable sources."
+      - "Record source references for non-obvious claims."
+    rights_rules:
+      - "Use original, licensed, public-domain, or user-authorized assets."
+    blocked_topics: []
+    cta_rules:
+      - "Use one concise, relevant call to action."
+    quality_gates:
+      - "Hook and ending must be complete."
+      - "Narration and scene plan must cover the full target duration."
+    created_by: "example-fixture"
+    change_summary: "Initial illustrative profile"
+
+  - profile_id: "00000000-0000-4000-8000-000000000002"
+    tenant_id: "example-workspace"
+    connected_account_id: "authorized-account-reference-2"
+    platform: instagram
+    display_name: "Example Cinematic Story Page"
+    status: draft
+    profile_version: 1
+    niche: "Original cinematic short stories"
+    audience: "Hindi-speaking story viewers"
+    language: "Hindi"
+    tone: "Cinematic, suspenseful, emotionally clear"
+    brand_guide: "Maintain continuity of character descriptions, locations, and story facts."
+    visual_rules:
+      - "Use vertical framing where the platform format supports it."
+      - "Keep character and costume descriptions consistent across scenes."
+      - "Every scene must advance the story."
+    voice_profile_ref: null
+    recurring_character_refs: []
+    default_output:
+      format: short_video
+      duration_seconds: 60
+      aspect_ratio: "9:16"
+      resolution: "1080x1920"
+      language_variant: "Hindi (India)"
+    research_rules:
+      - "Clearly distinguish fictional elements from factual claims."
+    rights_rules:
+      - "Do not use unlicensed third-party characters, music, or footage."
+    blocked_topics: []
+    cta_rules:
+      - "Place CTA after the story payoff when appropriate."
+    quality_gates:
+      - "No unresolved continuity contradictions."
+      - "No missing scenes or truncated narration."
+    created_by: "example-fixture"
+    change_summary: "Initial illustrative profile"
