@@ -38,6 +38,7 @@ def get_db_session():
 
 
 class ProfileCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     profile_id: str = Field(min_length=1, max_length=64)
     connected_account_id: str = Field(min_length=1, max_length=128)
     platform: str = Field(pattern=r"^(youtube|facebook|instagram)$")
