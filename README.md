@@ -21,6 +21,12 @@ The repository contains a planned library of **200 specialist skill specificatio
 - Telegram is intended for configurable notifications and a limited secure control surface; it is not a replacement for web-app authorization.
 - These are design contracts and schemas, **not proof that the UI, database adapters, provider integrations, or Telegram bot are implemented or connected**.
 
+## Concurrent workers and community management
+
+- [Worker orchestration specification](docs/WORKER-ORCHESTRATION.md) defines parallel jobs, dependency graphs, durable queues, capacity/rate limits, retries, checkpoints, cancellation, dead-letter handling, and worker safety boundaries.
+- [Community management specification](docs/COMMUNITY-MANAGEMENT.md) defines authorized multi-platform inboxes, comment classification, context-aware natural replies, factual verification, human escalation, controlled low-risk auto-send, and remote read-back.
+- [Worker/community acceptance matrix](tests/WORKER-COMMUNITY-ACCEPTANCE.md) lists required concurrency, recovery, account-isolation, reply-quality, moderation, and duplicate-send tests. These are acceptance requirements, not passed test results.
+
 ## Configuration validation and implementation backlog
 
 - [Consolidated implementation backlog](docs/IMPLEMENTATION-BACKLOG.md) separates completed specifications from remaining API, UI, runtime, integration, testing, and publishing work.
