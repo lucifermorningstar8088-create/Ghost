@@ -1,0 +1,176 @@
+# Ghost tool inventory. This is a proposed inventory, not proof of configured integrations.
+# Keep secrets out of this file. Store secret names/references only.
+schema_version: 1
+policy:
+  default_status: proposed
+  default_deny: true
+  paid_calls_require_budget_authorization: true
+  inject_all_tool_schemas_into_every_prompt: false
+  discovery_mode: progressive
+  max_retries: 3
+  retry_jitter: true
+  irreversible_actions_require_idempotency_and_readback: true
+  redact_secrets_from_logs: true
+
+capabilities:
+  - id: tool_discovery
+    priority: P0
+    primary: mcp_registry_adapter
+    fallback: cached_approved_catalog
+    safe_stop: block_unapproved_tool
+  - id: model_reasoning
+    priority: P0
+    primary: configured_model_adapter
+    fallback: secondary_approved_model_adapter
+    safe_stop: persist_job_and_report_unavailable
+  - id: schema_validation
+    priority: P0
+    primary: pydantic
+    fallback: json_schema_validator
+    safe_stop: reject_invalid_payload
+  - id: source_control
+    priority: P0
+    primary: github_connector
+    fallback: local_git_queue
+    safe_stop: keep_changes_on_branch
+  - id: backend_api
+    priority: P0
+    primary: fastapi
+    fallback: local_health_restart
+    safe_stop: return_degraded_status
+  - id: persistent_storage
+    priority: P0
+    primary: postgres_adapter
+    fallback: durable_local_export_queue
+    safe_stop: halt_uncertain_writes
+  - id: automated_testing
+    priority: P0
+    primary: pytest_ci
+    fallback: reproducible_local_test_runner
+    safe_stop: block_release_without_evidence
+  - id: security_scanning
+    priority: P0
+    primary: pinned_security_scanners
+    fallback: independent_scanner_and_manual_review
+    safe_stop: block_on_unresolved_critical_findings
+  - id: secrets_management
+    priority: P0
+    primary: secret_manager_or_environment
+    fallback: operator_rotation_and_reconfiguration
+    safe_stop: never_embed_secret_in_source
+  - id: observability
+    priority: P0
+    primary: structured_logs_metrics_traces
+    fallback: local_redacted_diagnostic_log
+    safe_stop: flag_observability_degraded
+  - id: web_research
+    priority: P1
+    primary: approved_search_adapter
+    fallback: second_approved_search_or_verified_cache
+    safe_stop: mark_evidence_missing_or_stale
+  - id: documentation_lookup
+    priority: P1
+    primary: context7_or_official_docs
+    fallback: version_pinned_local_docs
+    safe_stop: flag_version_uncertainty
+  - id: browser_automation
+    priority: P1
+    primary: playwright
+    fallback: official_api_or_manual_route
+    safe_stop: never_bypass_access_controls
+  - id: job_queue
+    priority: P1
+    primary: durable_queue_worker
+    fallback: dead_letter_queue
+    safe_stop: preserve_job_and_failure_reason
+  - id: platform_analytics
+    priority: P1
+    primary: authorized_official_api
+    fallback: timestamped_cached_snapshot
+    safe_stop: label_data_stale
+  - id: publishing
+    priority: P2
+    primary: authorized_official_platform_api
+    fallback: validated_manual_draft_package
+    safe_stop: require_approval_and_readback
+  - id: asset_provenance
+    priority: P1
+    primary: rights_and_source_ledger
+    fallback: manual_rights_review
+    safe_stop: block_unverified_assets
+  - id: media_processing
+    priority: P1
+    primary: ffmpeg_and_pillow
+    fallback: supported_local_converter
+    safe_stop: preserve_original_and_reject_partial_output
+  - id: transcription
+    priority: P2
+    primary: approved_speech_to_text_adapter
+    fallback: second_approved_adapter_or_manual_transcript
+    safe_stop: flag_low_confidence
+  - id: scheduling
+    priority: P1
+    primary: durable_scheduler
+    fallback: startup_reconciliation
+    safe_stop: deduplicate_before_replay
+  - id: notifications
+    priority: P2
+    primary: configured_notification_adapter
+    fallback: secondary_channel_or_in_app_queue
+    safe_stop: persist_pending_notification
+  - id: cost_and_quota
+    priority: P0
+    primary: usage_meter_and_budget_policy
+    fallback: cheaper_approved_route_or_pause
+    safe_stop: pause_paid_calls_at_budget_ceiling
+  - id: backup_recovery
+    priority: P1
+    primary: scheduled_backup_and_restore_test
+    fallback: secondary_export_destination
+    safe_stop: alert_on_failed_backup
+
+implementations:
+  # Configure these only after credentials, contracts, and tests are verified.
+  - id: github_connector
+    category: source_control
+    status: proposed
+    secrets: []
+  - id: fastapi
+    category: backend
+    status: proposed
+    secrets: []
+  - id: pydantic
+    category: validation
+    status: proposed
+    secrets: []
+  - id: postgres_adapter
+    category: storage
+    status: proposed
+    secrets:
+      - POSTGRES_DSN
+  - id: pytest_ci
+    category: testing
+    status: proposed
+    secrets: []
+  - id: playwright
+    category: browser_automation
+    status: proposed
+    secrets: []
+  - id: context7_or_official_docs
+    category: documentation
+    status: proposed
+    secrets: []
+  - id: approved_search_adapter
+    category: research
+    status: proposed
+    secrets:
+      - SEARCH_PROVIDER_API_KEY
+  - id: ffmpeg_and_pillow
+    category: media
+    status: proposed
+    secrets: []
+  - id: authorized_official_platform_api
+    category: publishing
+    status: proposed
+    secrets:
+      - PLATFORM_OAUTH_CREDENTIAL_REFERENCE
