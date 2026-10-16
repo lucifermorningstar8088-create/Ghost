@@ -48,6 +48,12 @@ Prevent avoidable workflow stoppages caused by missing integrations, provider ou
 | Notifications | Configured notification adapter | Secondary channel or in-app queue | Persist notification and expose pending state |
 | Backups/recovery | Scheduled DB/export backups | Secondary storage destination | Alert on failed backup; test restoration |
 | UI workflow | Automated browser tests | API contract tests + manual smoke test | Mark release blocked if critical path fails |
+| Channel/profile management | Tenant-scoped profile service and authorized account selector | Validated profile export and operator recovery | Block missing/unauthorized profile; never borrow another channel's settings |
+| Prompt assembly/versioning | Deterministic layered prompt assembler and immutable profile snapshots | Versioned template renderer / append-only export | Reject policy conflicts; preserve exact profile versions per job |
+| Content-type builder | Typed content-type service and schema validation | Validated template fixture | Block incompatible platform/output format |
+| Generation quality gates | Script/scene/schema/media completeness checks | Independent review/manual check | Mark needs_review; never claim incomplete output succeeded |
+| Approval workflow | Explicit approval state machine | Manual approval queue | Block external publishing without authorization and required approval |
+| Platform capability detection | Versioned per-platform capability adapter | Freshness-labelled capability cache | Block unsupported settings rather than silently ignoring them |
 
 ## Minimum tool contract
 
