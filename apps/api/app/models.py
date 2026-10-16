@@ -15,7 +15,7 @@ def utc_now() -> datetime:
 
 
 class ChannelProfile(Base):
-    """Versioned channel/page profile data; authorization is enforced by API layer later."""
+    """Versioned channel/page profile data; tenant-scoped access is enforced by authenticated API routes."""
 
     __tablename__ = "channel_profiles"
     __table_args__ = (

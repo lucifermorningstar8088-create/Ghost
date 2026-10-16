@@ -9,6 +9,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .auth import AuthenticatedUser, get_current_user
@@ -76,12 +77,18 @@ def create_channel_profile(
     data["tenant_id"] = user.tenant_id
     try:
         return create_profile(session, data)
-    except Exception as exc:
+    except IntegrityError as exc:
         session.rollback()
-        # Avoid leaking SQL or database details to clients.
-        if session.get_bind().dialect.name in {"sqlite", "postgresql"}:
-            raise HTTPException(status_code=409, detail="Profile ID already exists for this tenant") from exc
-        raise HTTPException(status_code=500, detail="Unable to create profile") from exc
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Profile ID already exists for this tenant",
+        ) from exc
+    except SQLAlchemyError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile storage is temporarily unavailable",
+        ) from exc
 
 
 @router.get("", response_model=list[ProfileRead])
@@ -120,8 +127,15 @@ def update_channel_profile(
     for field, value in changes.items():
         if value is not None:
             setattr(profile, field, value)
-    session.commit()
-    session.refresh(profile)
+    try:
+        session.commit()
+        session.refresh(profile)
+    except SQLAlchemyError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile storage is temporarily unavailable",
+        ) from exc
     return profile
 
 
@@ -140,5 +154,12 @@ def delete_channel_profile(
     if result.rowcount == 0:
         session.rollback()
         raise HTTPException(status_code=404, detail="Profile not found")
-    session.commit()
+    try:
+        session.commit()
+    except SQLAlchemyError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile storage is temporarily unavailable",
+        ) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
