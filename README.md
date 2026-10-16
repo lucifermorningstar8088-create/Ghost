@@ -16,6 +16,12 @@ The repository contains a planned library of **200 specialist skill specificatio
 
 Design rule: system safety, permissions, platform policy, rights checks, and budget constraints cannot be overridden by channel prompts. Channel profiles and content types are isolated by default; one-time prompt overrides affect only the current job. Test generation must never publish.
 
+## Configuration validation and implementation backlog
+
+- [Consolidated implementation backlog](docs/IMPLEMENTATION-BACKLOG.md) separates completed specifications from the remaining API, UI, runtime, testing, and publishing work.
+- [Configuration validation script](scripts/validate_configs.py) checks JSON Schemas, example YAML fixtures, cross-references, and the proposed tool registry.
+- [Development validation dependencies](requirements-dev.txt) and [GitHub Actions workflow](.github/workflows/validate-configs.yml) run those checks on pull requests and pushes. A successful run must be observed before claiming CI validation passed.
+
 ## Tool coverage and reliability
 
 - [Tool coverage and fallback standard](docs/TOOL-COVERAGE-AND-FALLBACK.md) defines critical capabilities, primary routes, fallback routes, safe-stop behavior, security, and readiness gates.
