@@ -1,0 +1,106 @@
+# Starter templates. These are examples, not enabled production templates.
+schema_version: 1
+content_types:
+  - content_type_id: "10000000-0000-4000-8000-000000000001"
+    tenant_id: "example-workspace"
+    owner_profile_id: "00000000-0000-4000-8000-000000000001"
+    name: "Explainer Short"
+    description: "One central idea explained clearly in a short vertical video."
+    version: 1
+    status: draft
+    supported_platforms: [youtube, instagram, facebook]
+    structure:
+      output_format: script
+      target_duration_seconds: 45
+      aspect_ratio: "9:16"
+      sections:
+        - id: hook
+          name: "Hook"
+          required: true
+          target_seconds: 3
+          instructions: "State the central question or surprising fact clearly."
+        - id: explanation
+          name: "Explanation"
+          required: true
+          target_seconds: 30
+          instructions: "Explain one idea in a logical sequence; verify factual claims."
+        - id: payoff
+          name: "Payoff and CTA"
+          required: true
+          target_seconds: 12
+          instructions: "Resolve the opening question and end cleanly."
+    creative_rules:
+      - "Avoid unrelated tangents and unexplained jargon."
+    visual_rules:
+      - "Provide a scene-by-scene visual plan with readable captions."
+    voice_rules:
+      - "Natural Hindi delivery; narration must match the scene timings."
+    research_rules:
+      - "Attach source references to factual claims."
+    quality_gates:
+      - "Duration budget sums to the target within configured tolerance."
+      - "Script and scene plan are both complete."
+    output_schema_ref: null
+
+  - content_type_id: "10000000-0000-4000-8000-000000000002"
+    tenant_id: "example-workspace"
+    owner_profile_id: "00000000-0000-4000-8000-000000000002"
+    name: "Cinematic Story"
+    description: "Original story with scene continuity and a clear ending."
+    version: 1
+    status: draft
+    supported_platforms: [youtube, instagram, facebook]
+    structure:
+      output_format: scene_plan
+      target_duration_seconds: 60
+      aspect_ratio: "9:16"
+      sections:
+        - id: setup
+          name: "Setup"
+          required: true
+          target_seconds: 10
+          instructions: "Establish protagonist, goal, and immediate situation."
+        - id: conflict
+          name: "Conflict"
+          required: true
+          target_seconds: 35
+          instructions: "Show clear cause and effect; keep character and location continuity."
+        - id: resolution
+          name: "Resolution"
+          required: true
+          target_seconds: 15
+          instructions: "Resolve the central question or provide a deliberate cliffhanger."
+    creative_rules:
+      - "Use original characters and story elements."
+      - "Every scene must change the situation or reveal useful information."
+    visual_rules:
+      - "Describe subject, action, location, lighting, camera framing, and continuity per scene."
+    voice_rules:
+      - "Narration must fit its allotted timing; no clipped final line."
+    research_rules:
+      - "Label fictional content clearly if it could be mistaken for factual reporting."
+    quality_gates:
+      - "Character and setting continuity checked."
+      - "All scenes and narration are complete."
+    output_schema_ref: null
+
+  - content_type_id: "10000000-0000-4000-8000-000000000003"
+    tenant_id: "example-workspace"
+    owner_profile_id: null
+    name: "Custom Content Type"
+    description: "Blank template. Clone it into a channel profile before use."
+    version: 1
+    status: draft
+    supported_platforms: [youtube]
+    structure:
+      output_format: custom
+      target_duration_seconds: null
+      aspect_ratio: custom
+      sections: []
+    creative_rules: []
+    visual_rules: []
+    voice_rules: []
+    research_rules: []
+    quality_gates:
+      - "Define at least one required output section before activating."
+    output_schema_ref: null
