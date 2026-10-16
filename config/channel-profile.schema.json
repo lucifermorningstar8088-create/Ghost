@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ghost.local/schemas/channel-profile.schema.json",
+  "title": "Ghost Channel Profile",
+  "description": "Schema for a versioned per-channel/page customization profile. This schema does not grant account authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_id", "tenant_id", "connected_account_id", "platform", "display_name", "status", "profile_version", "language", "tone", "default_output"],
+  "properties": {
+    "profile_id": {"type": "string", "format": "uuid"},
+    "tenant_id": {"type": "string", "minLength": 1},
+    "connected_account_id": {"type": "string", "minLength": 1},
+    "platform": {"type": "string", "enum": ["youtube", "facebook", "instagram", "other"]},
+    "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+    "status": {"type": "string", "enum": ["draft", "active", "disabled", "needs_review"]},
+    "profile_version": {"type": "integer", "minimum": 1},
+    "niche": {"type": "string", "maxLength": 500},
+    "audience": {"type": "string", "maxLength": 1000},
+    "language": {"type": "string", "minLength": 2, "maxLength": 80},
+    "tone": {"type": "string", "maxLength": 500},
+    "brand_guide": {"type": "string", "maxLength": 10000},
+    "visual_rules": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+    "voice_profile_ref": {"type": ["string", "null"], "maxLength": 200},
+    "recurring_character_refs": {"type": "array", "items": {"type": "string", "maxLength": 200}},
+    "default_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format"],
+      "properties": {
+        "format": {"type": "string", "enum": ["short_video", "long_video", "image_post", "carousel", "text_post", "custom"]},
+        "duration_seconds": {"type": ["integer", "null"], "minimum": 1, "maximum": 86400},
+        "aspect_ratio": {"type": ["string", "null"], "enum": ["9:16", "16:9", "1:1", "4:5", "custom", null]},
+        "resolution": {"type": ["string", "null"], "maxLength": 40},
+        "language_variant": {"type": ["string", "null"], "maxLength": 80}
+      }
+    },
+    "research_rules": {"type": "array", "items": {"type": "string", "maxLength": 2000}},
+    "rights_rules": {"type": "array", "items": {"type": "string", "maxLength": 2000}},
+    "blocked_topics": {"type": "array", "items": {"type": "string", "maxLength": 500}},
+    "cta_rules": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+    "quality_gates": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "created_by": {"type": "string", "maxLength": 200},
+    "change_summary": {"type": "string", "maxLength": 2000}
+  }
+}
