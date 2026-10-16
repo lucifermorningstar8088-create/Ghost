@@ -48,3 +48,12 @@ The repository contains a planned library of **200 specialist skill specificatio
 - Progressive tool discovery: load only the tools needed for a task rather than flooding every model call with every schema.
 
 **Important:** skill, tool, and customization files currently define specifications and examples, not a fully implemented runtime or UI. Database migrations, runtime adapters, platform permissions, executable automated tests, fallback drills, and benchmarks must be implemented and verified before production claims.
+
+
+## Ghost Operations Center UI
+
+The MagicPath-generated React/TypeScript UI is stored in `apps/web/src/components/ghost-operations-center/`. It includes nine screens for overview, live jobs, workers, community moderation/reply drafts, channel/profile setup, integrations, database selection, Telegram notifications and settings. The onboarding wizard supports YouTube, Facebook and Instagram profile drafts with independent niche, audience, language, format, brand voice, schedule, timezone and custom prompt settings.
+
+### UI integration status
+
+This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. Backend API, secure secret storage, database migrations, OAuth callbacks, job events and real provider adapters remain separate implementation tasks. The current repository is specification-first and does not yet contain a complete web application scaffold.
