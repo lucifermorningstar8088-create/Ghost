@@ -61,9 +61,14 @@ def test_profile_crud_is_authenticated_and_tenant_scoped(client: TestClient) -> 
 
 
 def test_client_cannot_choose_tenant_or_read_another_tenant(client: TestClient) -> None:
-    response = client.post("/api/v1/profiles", json={**payload(), "tenant_id": "tenant-b"})
-    assert response.status_code == 201
-    assert client.get("/api/v1/profiles/channel-1").status_code == 200
+    forged_tenant = client.post(
+        "/api/v1/profiles", json={**payload("forged-channel"), "tenant_id": "tenant-b"}
+    )
+    assert forged_tenant.status_code == 422
+    assert client.get("/api/v1/profiles/forged-channel").status_code == 404
+
+    created = client.post("/api/v1/profiles", json=payload())
+    assert created.status_code == 201
 
     app.dependency_overrides[get_current_user] = lambda: AuthenticatedUser(
         user_id="test-user-b", tenant_id="tenant-b", claims={}
