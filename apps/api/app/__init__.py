@@ -1,0 +1,1 @@
+"""Ghost backend application package."""
