@@ -21,9 +21,9 @@ def build_engine(database_url: str | None = None) -> Engine:
     """Create an engine for an explicit URL or server-side DATABASE_URL."""
     url = database_url or os.getenv("DATABASE_URL")
     if not url:
-        raise RuntimeError(
-            "DATABASE_URL is not configured. Set it in the backend environment."
-        )
+        # Local-first default: a PC install can start without hosted credentials.
+        # Deployments should always set DATABASE_URL explicitly.
+        url = "sqlite+pysqlite:///./ghost.db"
 
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
     return create_engine(url, pool_pre_ping=True, connect_args=connect_args)
