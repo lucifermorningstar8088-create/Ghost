@@ -94,26 +94,32 @@ Use this path to run the current repository locally on your own PC. This is a de
 
 Git is optional if you download the repository as a ZIP. No cloud API keys, Docker, Supabase, or PostgreSQL server are required for the default local SQLite health-check setup.
 
-### Option A: setup scripts (recommended)
+### Option A: one-click Windows launchers (recommended)
 
 1. Open the repository page and choose **Code → Download ZIP**.
 2. Extract the ZIP to a normal writable folder, for example `C:\\Projects\\Ghost`.
-3. Open that extracted `Ghost` folder in File Explorer.
-4. Click the address bar, type `powershell`, and press Enter. Confirm the current directory is the repository root (the folder containing `README.md`).
-5. Run:
+3. Open the extracted `Ghost` folder.
+4. Double-click **`setup.bat`** and wait for dependency installation and validation to finish.
+5. Double-click **`run.bat`** to start the API and web UI.
+
+The root batch files delegate reusable work to `scripts/windows/`. Keep `setup.bat`, `run.bat`, those PowerShell scripts, this README, and relevant tests synchronized whenever runtime requirements change. If startup fails, read the error in the service terminal before retrying.
+
+The API and frontend run in separate terminal windows. Keep them open while using Ghost. Close the service windows to stop the local development servers.
+
+### Option B: PowerShell scripts
+
+From the repository root, run setup:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\windows\setup-ghost.ps1
+.\\scripts\\windows\\setup-ghost.ps1
 ```
 
-6. When setup finishes, start the app:
+Then start the services:
 
 ```powershell
-.\scripts\windows\run-ghost.ps1
+.\\scripts\\windows\\run-ghost.ps1
 ```
-
-The runner opens separate PowerShell windows for the API and frontend. Keep those windows open while testing. To stop a service, focus its terminal and press `Ctrl+C`, or close that service's terminal window.
 
 ### Local addresses
 
