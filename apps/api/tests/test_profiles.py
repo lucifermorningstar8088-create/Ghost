@@ -58,9 +58,25 @@ def test_duplicate_profile_id_within_tenant_is_rejected(session: Session) -> Non
     session.rollback()
 
 
-def test_database_url_is_required_for_engine_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_engine_factory_defaults_to_local_sqlite_without_database_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from app.database import build_engine
 
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    with pytest.raises(RuntimeError, match="DATABASE_URL is not configured"):
-        build_engine()
+    engine = build_engine()
+    try:
+        assert engine.dialect.name == "sqlite"
+        assert engine.url.database == "./ghost.db"
+    finally:
+        engine.dispose()
+
+
+def test_engine_factory_accepts_explicit_database_url() -> None:
+    from app.database import build_engine
+
+    engine = build_engine("sqlite+pysqlite:///:memory:")
+    try:
+        assert engine.url.database == ":memory:"
+    finally:
+        engine.dispose()
