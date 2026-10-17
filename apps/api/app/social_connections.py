@@ -50,10 +50,22 @@ def _session():
 
 
 def _clean_metadata(value: dict[str, Any]) -> dict[str, Any]:
-    # Reject credential-looking fields in metadata rather than accidentally persisting them in clear text.
-    lowered = {str(k).lower() for k in value}
-    if lowered & _SECRET_FIELDS:
-        raise HTTPException(status_code=422, detail="Put credentials in the credentials field, not metadata")
+    """Reject credential-like keys at every nesting level to prevent plaintext secret leaks."""
+    def contains_secret(item: Any) -> bool:
+        if isinstance(item, dict):
+            return any(
+                str(key).strip().lower() in _SECRET_FIELDS or contains_secret(child)
+                for key, child in item.items()
+            )
+        if isinstance(item, list):
+            return any(contains_secret(child) for child in item)
+        return False
+
+    if contains_secret(value):
+        raise HTTPException(
+            status_code=422,
+            detail="Put credentials in the credentials field, not metadata",
+        )
     return value
 
 
