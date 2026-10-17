@@ -1,96 +1,117 @@
 @echo off
 setlocal EnableExtensions
-title Ghost - First Time Setup
+title Ghost - One Click Setup
 cd /d "%~dp0"
-
 echo.
-echo  ========================================
-echo        GHOST - ONE CLICK SETUP
-echo  ========================================
+echo  =========================================
+echo          GHOST FULL-STACK SETUP
+echo  =========================================
 echo.
 
+set "PYTHON_CMD="
 where py >nul 2>nul
-if %errorlevel%==0 (
-  py -3.12 --version >nul 2>nul
-  if not errorlevel 1 (
-    set "PYTHON_CMD=py -3.12"
-    goto python_found
-  )
-  py -3 --version >nul 2>nul
-  if not errorlevel 1 (
-    set "PYTHON_CMD=py -3"
-    goto python_found
-  )
-)
-
-where python >nul 2>nul
 if not errorlevel 1 (
-  python --version
-  set "PYTHON_CMD=python"
-  goto python_found
+  py -3.12 --version >nul 2>nul
+  if not errorlevel 1 set "PYTHON_CMD=py -3.12"
 )
-
-echo [ERROR] Python was not found.
-echo Install Python 3.12 from https://www.python.org/downloads/windows/
-echo During setup, enable "Add python.exe to PATH", then run setup.bat again.
-echo.
-pause
-exit /b 1
-
-:python_found
-echo [1/4] Python found.
+if not defined PYTHON_CMD (
+  where python >nul 2>nul
+  if not errorlevel 1 set "PYTHON_CMD=python"
+)
+if not defined PYTHON_CMD (
+  echo [ERROR] Python 3.12+ not found.
+  echo Install from https://www.python.org/downloads/windows/
+  echo Enable "Add Python to PATH", then rerun setup.bat.
+  pause
+  exit /b 1
+)
 %PYTHON_CMD% --version
+
+where node >nul 2>nul
+if errorlevel 1 (
+  echo [ERROR] Node.js was not found.
+  echo Install Node.js LTS from https://nodejs.org/ then rerun setup.bat.
+  pause
+  exit /b 1
+)
+where npm >nul 2>nul
+if errorlevel 1 (
+  echo [ERROR] npm was not found. Repair your Node.js LTS installation.
+  pause
+  exit /b 1
+)
+node --version
+npm --version
+
 if not exist "apps\api\requirements.txt" (
-  echo [ERROR] apps\api\requirements.txt not found. Run this from the Ghost repository.
+  echo [ERROR] apps\api\requirements.txt not found. Use the Ghost repository root.
+  pause
+  exit /b 1
+)
+if not exist "apps\web\package.json" (
+  echo [ERROR] apps\web\package.json not found.
   pause
   exit /b 1
 )
 
 echo.
-echo [2/4] Creating the isolated API environment...
+echo [1/5] Preparing isolated Python environment...
 if not exist "apps\api\.venv\Scripts\python.exe" (
   %PYTHON_CMD% -m venv "apps\api\.venv"
-  if errorlevel 1 goto setup_failed
-) else (
-  echo Existing virtual environment found. Reusing it.
+  if errorlevel 1 goto failed
 )
-
 echo.
-echo [3/4] Installing/updating Ghost API dependencies...
+echo [2/5] Installing API dependencies...
 "apps\api\.venv\Scripts\python.exe" -m pip install --upgrade pip
-if errorlevel 1 goto setup_failed
+if errorlevel 1 goto failed
 "apps\api\.venv\Scripts\python.exe" -m pip install -r "apps\api\requirements.txt"
-if errorlevel 1 goto setup_failed
+if errorlevel 1 goto failed
 
 echo.
-echo [4/4] Checking that the API imports successfully...
-pushd "apps\api"
-".venv\Scripts\python.exe" -c "from app.main import app; print('Ghost API import OK:', app.title)"
+echo [3/5] Installing web dependencies...
+pushd "apps\web"
+call npm install
 if errorlevel 1 (
   popd
-  goto setup_failed
+  goto failed
 )
 popd
 
 echo.
-echo ========================================
+echo [4/5] Checking API import...
+pushd "apps\api"
+".venv\Scripts\python.exe" -c "from app.main import app; print('API import OK:', app.title)"
+if errorlevel 1 (
+  popd
+  goto failed
+)
+popd
+
+echo.
+echo [5/5] Checking frontend production build...
+pushd "apps\web"
+call npm run build
+if errorlevel 1 (
+  popd
+  goto failed
+)
+popd
+
+echo.
+echo =========================================
 echo SETUP COMPLETE
-echo ========================================
-echo Double-click run.bat to start Ghost API.
-echo Local API docs: http://127.0.0.1:8000/docs
-echo Local health:   http://127.0.0.1:8000/health/ready
+echo =========================================
+echo Double-click run.bat to launch Ghost UI + API.
+echo UI:  http://127.0.0.1:5173
+echo API: http://127.0.0.1:8000
 echo.
-echo Note: this repository currently provides the API foundation.
-echo Social platforms, provider adapters, Telegram, and a full web UI
-echo are not automatically configured by these launcher scripts.
-echo.
+echo This setup does not create credentials or enable external providers.
 pause
 exit /b 0
 
-:setup_failed
+:failed
 echo.
-echo [ERROR] Setup did not complete. Check the error shown above.
-echo Fix the issue and run setup.bat again. It is safe to rerun.
-echo.
+echo [ERROR] Setup failed. Read the error above, fix it, and rerun setup.bat.
+echo The script can be rerun safely.
 pause
 exit /b 1
