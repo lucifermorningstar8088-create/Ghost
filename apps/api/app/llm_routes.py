@@ -38,6 +38,14 @@ def get_router() -> LLMFailoverRouter:
     return LLMFailoverRouter()
 
 
+@router.get("/health")
+def provider_health(
+    _user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Return configured provider health metadata without probing/billing providers."""
+    return {"providers": get_router().health()}
+
+
 @router.post("/chat", response_model=ChatResponse)
 def chat(
     payload: ChatRequest,
