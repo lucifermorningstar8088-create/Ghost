@@ -2,6 +2,7 @@
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,6 +16,16 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(profile_router)
+
+# Keep browser access explicit and configurable. Add the deployed web origin to GHOST_CORS_ORIGINS.
+_allowed_origins = [origin.strip() for origin in os.getenv("GHOST_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if origin.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["Accept", "Authorization", "Content-Type"],
+)
 
 
 @app.get("/health/live", tags=["health"])
