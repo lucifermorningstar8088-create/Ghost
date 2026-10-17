@@ -50,6 +50,10 @@ pools:
     status: proposed
     max_parallel_jobs: 1
     weekly_gpu_hours_budget: 0
+    stop_on_completion: true
+    max_runtime_seconds: 3600
+    stop_verification_timeout_seconds: 300
+    status_poll_interval_seconds: 15
     quota_tracking: provider_verified
     credential_env_refs: []
     capabilities:
