@@ -49,7 +49,11 @@
           "weekly_gpu_hours_budget",
           "quota_tracking",
           "credential_env_refs",
-          "capabilities"
+          "capabilities",
+          "stop_on_completion",
+          "max_runtime_seconds",
+          "stop_verification_timeout_seconds",
+          "status_poll_interval_seconds"
         ],
         "properties": {
           "pool_id": {
@@ -115,6 +119,24 @@
               ]
             },
             "uniqueItems": true
+          },
+          "stop_on_completion": {
+            "const": true
+          },
+          "max_runtime_seconds": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 21600
+          },
+          "stop_verification_timeout_seconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 900
+          },
+          "status_poll_interval_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 60
           },
           "notes": {
             "type": "string",
