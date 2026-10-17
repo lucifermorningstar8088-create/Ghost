@@ -2,6 +2,7 @@
 setlocal EnableExtensions
 title Ghost - One Click Setup
 cd /d "%~dp0"
+
 echo.
 echo  =========================================
 echo          GHOST FULL-STACK SETUP
@@ -20,8 +21,7 @@ if not defined PYTHON_CMD (
 )
 if not defined PYTHON_CMD (
   echo [ERROR] Python 3.12+ not found.
-  echo Install from https://www.python.org/downloads/windows/
-  echo Enable "Add Python to PATH", then rerun setup.bat.
+  echo Install from https://www.python.org/downloads/windows/ and enable Add Python to PATH.
   pause
   exit /b 1
 )
@@ -29,8 +29,7 @@ if not defined PYTHON_CMD (
 
 where node >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] Node.js was not found.
-  echo Install Node.js LTS from https://nodejs.org/ then rerun setup.bat.
+  echo [ERROR] Node.js was not found. Install Node.js LTS from https://nodejs.org/
   pause
   exit /b 1
 )
@@ -43,52 +42,20 @@ if errorlevel 1 (
 node --version
 npm --version
 
-if not exist "apps\api\requirements.txt" (
-  echo [ERROR] apps\api\requirements.txt not found. Use the Ghost repository root.
-  pause
-  exit /b 1
-)
-if not exist "apps\web\package.json" (
-  echo [ERROR] apps\web\package.json not found.
+if not exist "scripts\windows\setup-ghost.ps1" (
+  echo [ERROR] Required setup script is missing: scripts\windows\setup-ghost.ps1
+  echo Make sure you are running this from the extracted Ghost repository root.
   pause
   exit /b 1
 )
 
 echo.
-echo [1/5] Preparing isolated Python environment...
-if not exist "apps\api\.venv\Scripts\python.exe" (
-  %PYTHON_CMD% -m venv "apps\api\.venv"
-  if errorlevel 1 goto failed
-)
-echo.
-echo [2/5] Installing API dependencies...
-"apps\api\.venv\Scripts\python.exe" -m pip install --upgrade pip
-if errorlevel 1 goto failed
-"apps\api\.venv\Scripts\python.exe" -m pip install -r "apps\api\requirements.txt"
+echo Delegating setup to the maintained project setup script...
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\windows\setup-ghost.ps1"
 if errorlevel 1 goto failed
 
 echo.
-echo [3/5] Installing web dependencies...
-pushd "apps\web"
-call npm install
-if errorlevel 1 (
-  popd
-  goto failed
-)
-popd
-
-echo.
-echo [4/5] Checking API import...
-pushd "apps\api"
-".venv\Scripts\python.exe" -c "from app.main import app; print('API import OK:', app.title)"
-if errorlevel 1 (
-  popd
-  goto failed
-)
-popd
-
-echo.
-echo [5/5] Checking frontend production build...
+echo Running frontend production build validation...
 pushd "apps\web"
 call npm run build
 if errorlevel 1 (
@@ -105,13 +72,13 @@ echo Double-click run.bat to launch Ghost UI + API.
 echo UI:  http://127.0.0.1:5173
 echo API: http://127.0.0.1:8000
 echo.
-echo This setup does not create credentials or enable external providers.
+echo Setup does not apply database migrations or connect external accounts.
 pause
 exit /b 0
 
 :failed
 echo.
 echo [ERROR] Setup failed. Read the error above, fix it, and rerun setup.bat.
-echo The script can be rerun safely.
+echo The script can be rerun safely; it does not reset the database.
 pause
 exit /b 1
