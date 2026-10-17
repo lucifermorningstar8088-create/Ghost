@@ -1,24 +1,28 @@
 # Supabase browser sign-in setup
 
-The web app's Supabase browser auth foundation reads only these public variables:
+The web app supports passwordless email magic-link sign-in through Supabase Auth.
 
-- `VITE_SUPABASE_URL`: the Supabase project URL.
-- `VITE_SUPABASE_ANON_KEY`: the project's public anon/publishable key.
+## Frontend environment
 
-Copy `apps/web/.env.example` to `.env.local` for local development and fill in these public values. Do not commit real environment files. Never use a Supabase service-role key or database password in a `VITE_*` variable: browser variables are shipped to every visitor.
+Copy `apps/web/.env.example` to `apps/web/.env.local` and set:
+
+- `VITE_SUPABASE_URL`: your Supabase project URL.
+- `VITE_SUPABASE_ANON_KEY`: the public anon/publishable key.
+- `VITE_GHOST_API_URL`: the Ghost API base URL.
+
+Only public client values belong in `VITE_*` variables. Never put a service-role key, database password, social OAuth secret, or provider API key in the browser.
 
 ## Supabase dashboard
 
-1. Open Authentication → URL Configuration.
-2. Set the Site URL to the deployed web app origin.
-3. Add each trusted local/deployed origin to the Redirect URLs allowlist.
-4. Configure email OTP/magic-link delivery and templates.
-5. Configure the API backend separately with `SUPABASE_URL` and its database settings as described in `apps/api/docs/AUTHENTICATION.md`.
+1. Enable the Email provider in Authentication.
+2. Add the local origin (usually `http://localhost:5173`) and deployed web origin to Authentication URL Configuration's allowed redirect URLs.
+3. Set the Site URL to the deployed app origin before production.
+4. Configure email link delivery/templates and suitable rate limits.
 
-The browser helper uses Supabase's SDK session handling and exposes functions to request an email magic link, read the current session, observe session changes, and sign out. It does not accept a tenant ID or elevate privileges.
+Supabase JS manages the browser session. Ghost does not manually copy access tokens into local storage.
 
-## Important integration boundary
+## API tenant authorization
 
-This PR adds the authentication client foundation only. It does not yet gate the operations UI, connect sign-in controls, or replace local preview profile state with API-backed state. The next UI integration must pass the current session's access token to the typed profile API client. The backend remains authoritative for JWT verification and tenant scope, sourced from verified `app_metadata.tenant_id`. Assign tenant membership only through a trusted server-side administrative workflow.
+Successful sign-in alone does not grant access to tenant-scoped profile endpoints. The API requires a verified access token with `app_metadata.tenant_id` assigned by a trusted server-side administrative workflow. Never set tenant membership from user-editable metadata or a browser request. Follow `apps/api/docs/AUTHENTICATION.md` and test against the real project before enabling profile CRUD.
 
-A configured browser client does not prove the backend issuer/JWKS, tenant assignment, database migration, or deployed CORS settings are correct. Verify those against the real project before production use.
+The sign-in panel is a foundation. Profile management remains local preview state until the session is connected to `profileApi.ts` and the backend tenant assignment is configured.
