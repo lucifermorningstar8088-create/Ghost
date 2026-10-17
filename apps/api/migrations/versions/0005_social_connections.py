@@ -32,6 +32,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("connection_id", name="uq_social_connection_id"),
     )
     op.create_index("ix_social_connections_connection_id", "social_connections", ["connection_id"], unique=True)
+    op.create_index("ix_social_connections_connection_id", "social_connections", ["connection_id"], unique=True)
     op.create_index("ix_social_connections_tenant_id", "social_connections", ["tenant_id"])
     op.create_index("ix_social_connections_platform", "social_connections", ["platform"])
 
@@ -39,5 +40,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_social_connections_platform", table_name="social_connections")
     op.drop_index("ix_social_connections_tenant_id", table_name="social_connections")
+    op.drop_index("ix_social_connections_connection_id", table_name="social_connections")
     op.drop_index("ix_social_connections_connection_id", table_name="social_connections")
     op.drop_table("social_connections")
