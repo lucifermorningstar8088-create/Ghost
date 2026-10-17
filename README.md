@@ -194,6 +194,23 @@ python -m pip install -r requirements-dev.txt
 python scripts/validate_configs.py
 ```
 
+### One-command local test runner (Windows)
+
+After running `scripts/windows/run-ghost.ps1` and confirming the API is running, open a new PowerShell window at the repository root and run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\windows\test-ghost.ps1
+```
+
+The test runner checks API liveness, database readiness, and migration status, then runs API tests, frontend typecheck, and a production build. It does **not** apply migrations. If the database is not ready, a health endpoint is unavailable, or a test/build fails, it stops and prints an error to investigate.
+
+To run health checks and API tests without frontend typecheck/build:
+
+```powershell
+.\scripts\windows\test-ghost.ps1 -SkipBuild
+```
+
 ### Basic smoke-test checklist
 
 1. Confirm the API liveness endpoint responds.
