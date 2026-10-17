@@ -56,7 +56,7 @@ The MagicPath-generated React/TypeScript UI is stored in `apps/web/src/component
 
 ### UI integration status
 
-This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. Backend API, secure secret storage, database migrations, OAuth callbacks, job events and real provider adapters remain separate implementation tasks. The current repository is specification-first and does not yet contain a complete web application scaffold.
+This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. Backend API, secure secret storage, database migrations, OAuth callbacks, job events and real provider adapters remain separate implementation tasks. The repository contains a runnable React/Vite frontend shell and a FastAPI backend scaffold, but many operations-center panels still use demo data and the platform is not production-ready.
 
 ## Run the web UI locally
 
@@ -79,3 +79,154 @@ npm run preview
 Copy `apps/web/.env.example` to `.env.local` only if you need to set a public API base URL. Never place provider secrets, Supabase service-role keys, OAuth client secrets, database passwords, or Telegram tokens in `VITE_*` variables.
 
 **Runtime boundary:** this makes the frontend shell runnable, not the platform production-ready. The current operations center uses seeded demo data and local component state. Login/OAuth, durable persistence, real provider health, worker queues/events, actual publishing, and Telegram delivery remain unimplemented until backend services are added and verified.
+
+## Install Ghost on Windows 10/11
+
+Use this path to run the current repository locally on your own PC. This is a developer setup, not a one-click production installer.
+
+### Prerequisites
+
+- Windows 10/11, 64-bit
+- Python 3.12 or newer on PATH
+- Node.js LTS (npm is included)
+- Internet access for the first dependency install
+- PowerShell
+
+Git is optional if you download the repository as a ZIP. No cloud API keys, Docker, Supabase, or PostgreSQL server are required for the default local SQLite health-check setup.
+
+### Option A: setup scripts (recommended)
+
+1. Open the repository page and choose **Code → Download ZIP**.
+2. Extract the ZIP to a normal writable folder, for example `C:\\Projects\\Ghost`.
+3. Open that extracted `Ghost` folder in File Explorer.
+4. Click the address bar, type `powershell`, and press Enter. Confirm the current directory is the repository root (the folder containing `README.md`).
+5. Run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\windows\setup-ghost.ps1
+```
+
+6. When setup finishes, start the app:
+
+```powershell
+.\scripts\windows\run-ghost.ps1
+```
+
+The runner opens separate PowerShell windows for the API and frontend. Keep those windows open while testing. To stop a service, focus its terminal and press `Ctrl+C`, or close that service's terminal window.
+
+### Local addresses
+
+| Purpose | Address |
+| --- | --- |
+| Web UI | http://127.0.0.1:5173 |
+| API interactive docs | http://127.0.0.1:8000/docs |
+| Liveness check | http://127.0.0.1:8000/health/live |
+| Readiness / database connectivity | http://127.0.0.1:8000/health/ready |
+| Migration status (read-only) | http://127.0.0.1:8000/health/migrations |
+
+Use `127.0.0.1` on the same PC. These development servers are not intended to be exposed directly to the public internet.
+
+### Option B: run each service manually
+
+Open two terminals at the repository root.
+
+Terminal 1, API:
+
+```powershell
+cd apps/api
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+$env:PYTHONPATH = "."
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Terminal 2, frontend:
+
+```powershell
+cd apps/web
+npm install
+Copy-Item .env.example .env.local -ErrorAction SilentlyContinue
+npm run dev -- --host 127.0.0.1
+```
+
+### Database behavior and migrations
+
+- If the API process has no `DATABASE_URL`, the current database helper defaults to local SQLite at `apps/api/ghost.db` when started from `apps/api`.
+- The setup script does not automatically apply database migrations or reset data.
+- Open `/health/migrations` to inspect migration status. This endpoint is read-only; it does not create or upgrade tables.
+- Do not paste the PostgreSQL example URL from `apps/api/.env.example` unless you have configured a matching PostgreSQL server and credentials.
+- Before running any migration command, review the migration files and back up any database you care about.
+
+### Frontend environment configuration
+
+`apps/web/.env.example` contains public Vite configuration such as `VITE_GHOST_API_URL`. Copy it to `apps/web/.env.local` if needed and set the API base URL to `http://127.0.0.1:8000`.
+
+**Never put a Supabase service-role key, provider API secret, database password, OAuth client secret, or Telegram bot token in a `VITE_*` variable.** Vite variables are shipped to the browser. Server-side secrets must stay in server-side environment/configuration and must not be committed to Git.
+
+## Day-to-day development operations
+
+### Run frontend checks
+
+```powershell
+cd apps/web
+npm run typecheck
+npm run build
+```
+
+### Run API tests
+
+```powershell
+cd apps/api
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pytest
+```
+
+### Validate repository configuration
+
+From the repository root, install the development requirements if needed, then run:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python scripts/validate_configs.py
+```
+
+### Basic smoke-test checklist
+
+1. Confirm the API liveness endpoint responds.
+2. Confirm the readiness endpoint reports database connectivity; if not, inspect the API terminal and effective database configuration.
+3. Inspect migration status. A `not_initialized` or `pending` state means database migrations still need deliberate review and setup.
+4. Open the UI and test navigation, forms and screen layout.
+5. Run frontend typecheck/build and API tests before submitting code changes.
+6. Check the API and frontend terminals for errors; do not treat a page rendering as proof that external integrations are connected.
+
+## Troubleshooting
+
+- **`python` not found:** install Python 3.12+ and enable the installer option to add Python to PATH, then reopen PowerShell.
+- **`npm` not found:** install Node.js LTS, then reopen PowerShell and verify `node --version` and `npm --version`.
+- **PowerShell says scripts are disabled:** run `Set-ExecutionPolicy -Scope Process Bypass` in that terminal only, then retry the setup script.
+- **Port 8000 or 5173 is already in use:** stop the other process using that port before starting Ghost. The Vite dev server is configured to require its expected port.
+- **Frontend opens but API calls fail:** verify the API terminal is running, check `VITE_GHOST_API_URL` in `.env.local`, then restart Vite after changing environment variables.
+- **Readiness fails:** check the API terminal and database URL. With the local default, start the API from `apps/api` so the SQLite file is created in the expected working directory.
+- **Migration status is not up to date:** the status endpoint only reports state. Review migrations and back up data before applying any schema change.
+- **Profile endpoints return 401/403:** authenticated profile operations require correctly configured Supabase JWT verification and tenant metadata; local startup alone does not bypass authentication.
+- **Dependency installation fails:** check internet access and supported Python/Node versions, then rerun the failed install command and keep the full error output for debugging.
+
+## What is operational today, and what is not
+
+**Runnable locally:** the React/Vite shell, FastAPI service, health endpoints, database connectivity check, migration-status inspection, configuration validation, and automated checks that pass in CI.
+
+**Still incomplete or requires external setup:** real login/OAuth connections, durable settings for every screen, live provider health, actual worker queues/events, social publishing, Telegram delivery, and production-grade secret storage. Seeded jobs, worker/provider status, and community comments shown in the operations center are demo data. The profile API is tenant-scoped and requires valid authentication configuration.
+
+Do not use the current UI as proof that a social account is connected or that a post/message was actually published or delivered. Enable external integrations only after their credentials, permissions, failure handling, and tests have been implemented and verified.
+
+## Further implementation references
+
+- [Windows local setup guide](docs/LOCAL-PC-SETUP.md)
+- [Implementation backlog](docs/IMPLEMENTATION-BACKLOG.md)
+- [Database and integration control-plane specification](docs/CONFIGURABLE-INTEGRATIONS-AND-DATABASE.md)
+- [Worker orchestration specification](docs/WORKER-ORCHESTRATION.md)
+- [Community management specification](docs/COMMUNITY-MANAGEMENT.md)
