@@ -174,3 +174,36 @@ def test_profile_update_rejects_client_managed_version_field(client: TestClient)
     client.post("/api/v1/profiles", json=payload())
     response = client.patch("/api/v1/profiles/channel-1", json={"profile_version": 99})
     assert response.status_code == 422
+
+
+
+def test_profile_update_conflicts_if_database_version_changes_after_read(client: TestClient) -> None:
+    from app.models import ChannelProfile
+
+    created = client.post("/api/v1/profiles", json=payload())
+    assert created.status_code == 201
+
+    # Arrange a newer committed version before the request attempts its write.
+    factory = client.app.dependency_overrides[get_db_session]
+    generator = factory()
+    session = next(generator)
+    profile = session.query(ChannelProfile).filter_by(
+        tenant_id="tenant-a", profile_id="channel-1"
+    ).one()
+    profile.display_name = "Concurrent Winner"
+    profile.profile_version = 2
+    session.commit()
+    session.close()
+    try:
+        next(generator)
+    except StopIteration:
+        pass
+
+    response = client.patch(
+        "/api/v1/profiles/channel-1",
+        json={"display_name": "Late Overwrite", "expected_profile_version": 1},
+    )
+    assert response.status_code == 409
+    current = client.get("/api/v1/profiles/channel-1").json()
+    assert current["display_name"] == "Concurrent Winner"
+    assert current["profile_version"] == 2

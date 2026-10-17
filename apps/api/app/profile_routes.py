@@ -8,7 +8,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -149,20 +149,42 @@ def update_channel_profile(
         raise HTTPException(status_code=422, detail="At least one profile field must be provided")
     if expected_version is not None and expected_version != profile.profile_version:
         raise HTTPException(status_code=409, detail="Profile was changed by another request; refresh and retry")
-    for field, value in changes.items():
-        if value is not None:
-            setattr(profile, field, value)
-    profile.profile_version += 1
+
+    # Make the version comparison and increment part of one database statement.
+    # This prevents two simultaneous writers from both updating the same version.
+    version_to_match = profile.profile_version
+    update_values = {field: value for field, value in changes.items() if value is not None}
+    update_values["profile_version"] = ChannelProfile.profile_version + 1
     try:
+        result = session.execute(
+            update(ChannelProfile)
+            .where(
+                ChannelProfile.tenant_id == user.tenant_id,
+                ChannelProfile.profile_id == profile_id,
+                ChannelProfile.profile_version == version_to_match,
+            )
+            .values(**update_values)
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Profile was changed by another request; refresh and retry",
+            )
         session.commit()
-        session.refresh(profile)
+        updated_profile = get_profile(session, user.tenant_id, profile_id)
+    except HTTPException:
+        raise
     except SQLAlchemyError as exc:
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Profile storage is temporarily unavailable",
         ) from exc
-    return profile
+    if updated_profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return updated_profile
 
 
 @router.delete("/{profile_id}", status_code=status.HTTP_204_NO_CONTENT)
