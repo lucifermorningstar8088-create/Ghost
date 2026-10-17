@@ -123,3 +123,25 @@ def test_profile_database_read_and_delete_failures_return_503(
     response = getattr(client, method)(path)
     assert response.status_code == 503
     assert response.json()["detail"] == "Profile storage is temporarily unavailable"
+
+
+def test_profile_update_lookup_database_failure_returns_503(client: TestClient) -> None:
+    class BrokenSession:
+        def scalars(self, *_args, **_kwargs):
+            raise SQLAlchemyError("simulated database outage")
+
+        def rollback(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+    def override_broken_db():
+        yield BrokenSession()
+
+    app.dependency_overrides[get_db_session] = override_broken_db
+    response = client.patch(
+        "/api/v1/profiles/channel-1", json={"display_name": "Updated Name"}
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Profile storage is temporarily unavailable"
