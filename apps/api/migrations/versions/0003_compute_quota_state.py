@@ -34,8 +34,24 @@ def upgrade() -> None:
         sa.UniqueConstraint("tenant_id", "pool_id", name="uq_compute_quota_tenant_pool"),
     )
     op.create_index("ix_compute_quota_states_tenant_id", "compute_quota_states", ["tenant_id"], unique=False)
+    op.create_table(
+        "compute_budget_reservations",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("tenant_id", sa.String(length=128), nullable=False),
+        sa.Column("pool_id", sa.String(length=64), nullable=False),
+        sa.Column("job_id", sa.String(length=36), nullable=False),
+        sa.Column("reserved_hours", sa.Float(), nullable=False),
+        sa.Column("status", sa.String(length=24), nullable=False, server_default="reserved"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.CheckConstraint("reserved_hours > 0", name="ck_compute_reservation_hours_positive"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("tenant_id", "job_id", name="uq_compute_reservation_tenant_job"),
+    )
+    op.create_index("ix_compute_budget_reservations_tenant_id", "compute_budget_reservations", ["tenant_id"], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_index("ix_compute_budget_reservations_tenant_id", table_name="compute_budget_reservations")
+    op.drop_table("compute_budget_reservations")
     op.drop_index("ix_compute_quota_states_tenant_id", table_name="compute_quota_states")
     op.drop_table("compute_quota_states")
