@@ -48,3 +48,18 @@ def test_readiness_returns_503_when_configured_database_is_unavailable(monkeypat
     assert response.status_code == 503
     assert response.json()["status"] == "unavailable"
     assert response.json()["checks"]["database"] == "unavailable"
+
+
+def test_cors_preflight_allows_profile_crud_methods() -> None:
+    for method in ("GET", "POST", "PATCH", "DELETE"):
+        response = client.options(
+            "/api/v1/profiles",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": method,
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+        assert method in response.headers["access-control-allow-methods"]
