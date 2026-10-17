@@ -1,6 +1,6 @@
 # LLM Fast-First Routing and Automatic Failover
 
-Ghost's authenticated endpoint is `POST /api/v1/llm/chat`. It uses the server-side provider registry and tries the configured fast providers first, then the remaining providers by priority. If a model is rate-limited, times out, returns a server error, or is unreachable, the router attempts the next configured model/provider. A provider with missing credentials is skipped.
+Ghost's authenticated endpoint is `POST /api/v1/llm/chat`. The authenticated, non-probing route status endpoint is `GET /api/v1/llm/health`. It uses the server-side provider registry and tries the configured fast providers first, then the remaining providers by priority. If a model is rate-limited, times out, returns a server error, or is unreachable, the router attempts the next configured model/provider. A provider with missing credentials is skipped.
 
 ## Configuration
 
@@ -56,3 +56,8 @@ The router currently targets the OpenAI-compatible `/chat/completions` protocol.
 ## Current integration status
 
 The endpoint and unit tests are included in the code change. Merge only after CI passes. Deployment still requires configuring at least two genuinely independent compatible providers and their server-side secrets. No provider API keys are included in the repository.
+
+
+## Health endpoint
+
+`GET /api/v1/llm/health` returns configured provider names, configured model counts, priority, fast-first flag, whether the named server-side credential is present, process-local circuit availability, and configured timeout. It does not return API keys or provider URLs and does not send a probe request. This endpoint reports configuration/circuit state, not a guarantee that an upstream model is currently reachable or has quota.
