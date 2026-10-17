@@ -66,6 +66,20 @@ if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed with exit code $LASTEXITCOD
 & $Pip install -r (Join-Path $ApiDir "requirements.txt")
 if ($LASTEXITCODE -ne 0) { throw "API dependency installation failed with exit code $LASTEXITCODE." }
 
+# Initialize/update the local SQLite schema automatically, but never migrate a
+# configured remote database as a side effect of setup.
+if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) {
+  Write-Host "Applying database migrations to local SQLite..." -ForegroundColor Cyan
+  Push-Location $ApiDir
+  try {
+    & $Python -m alembic upgrade head
+    if ($LASTEXITCODE -ne 0) { throw "Local SQLite migrations failed with exit code $LASTEXITCODE." }
+  } finally { Pop-Location }
+} else {
+  Write-Host "DATABASE_URL is set; skipping automatic migrations for the configured database." -ForegroundColor Yellow
+  Write-Host "Back up that database, then review and run Alembic migrations explicitly from apps/api." -ForegroundColor Yellow
+}
+
 Write-Host "Installing web dependencies..." -ForegroundColor Cyan
 Push-Location $WebDir
 try {
