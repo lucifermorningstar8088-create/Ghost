@@ -3,6 +3,7 @@ from collections.abc import Generator
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -88,3 +89,37 @@ def test_profile_endpoints_require_authentication_when_not_overridden(client: Te
     app.dependency_overrides.pop(get_current_user)
     response = client.get("/api/v1/profiles")
     assert response.status_code == 401
+
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/v1/profiles"),
+        ("get", "/api/v1/profiles/channel-1"),
+        ("delete", "/api/v1/profiles/channel-1"),
+    ],
+)
+def test_profile_database_read_and_delete_failures_return_503(
+    client: TestClient, method: str, path: str
+) -> None:
+    class BrokenSession:
+        def scalars(self, *_args, **_kwargs):
+            raise SQLAlchemyError("simulated database outage")
+
+        def execute(self, *_args, **_kwargs):
+            raise SQLAlchemyError("simulated database outage")
+
+        def rollback(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+    def override_broken_db():
+        yield BrokenSession()
+
+    app.dependency_overrides[get_db_session] = override_broken_db
+    response = getattr(client, method)(path)
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Profile storage is temporarily unavailable"
