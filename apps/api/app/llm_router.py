@@ -123,7 +123,7 @@ class ResilientLLMRouter:
                     provider.base_url + "/models",
                     headers={"Authorization": "Bearer " + key},
                 )
-            state.healthy = response.status_code < 500 and response.status_code != 429
+            state.healthy = 200 <= response.status_code < 300
         except (httpx.HTTPError, OSError):
             state.healthy = False
         return state.healthy
