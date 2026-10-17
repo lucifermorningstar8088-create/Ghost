@@ -49,10 +49,10 @@ class ProfileCreate(BaseModel):
 
 class ProfileUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    expected_profile_version: int | None = Field(default=None, ge=1)
     connected_account_id: str | None = Field(default=None, min_length=1, max_length=128)
     platform: str | None = Field(default=None, pattern=r"^(youtube|facebook|instagram)$")
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
-    profile_version: int | None = Field(default=None, ge=1)
     profile_data: dict[str, Any] | None = None
 
 
@@ -144,11 +144,15 @@ def update_channel_profile(
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
     changes = payload.model_dump(exclude_unset=True)
+    expected_version = changes.pop("expected_profile_version", None)
     if not changes:
-        raise HTTPException(status_code=422, detail="At least one field must be provided")
+        raise HTTPException(status_code=422, detail="At least one profile field must be provided")
+    if expected_version is not None and expected_version != profile.profile_version:
+        raise HTTPException(status_code=409, detail="Profile was changed by another request; refresh and retry")
     for field, value in changes.items():
         if value is not None:
             setattr(profile, field, value)
+    profile.profile_version += 1
     try:
         session.commit()
         session.refresh(profile)

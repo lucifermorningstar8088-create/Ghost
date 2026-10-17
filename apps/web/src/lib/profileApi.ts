@@ -26,10 +26,10 @@ export interface GhostProfileInput {
 }
 
 export interface GhostProfilePatch {
+  expected_profile_version?: number;
   connected_account_id?: string;
   platform?: GhostPlatform;
   display_name?: string;
-  profile_version?: number;
   profile_data?: Record<string, unknown>;
 }
 
@@ -73,7 +73,7 @@ async function request<T>(path: string, accessToken: string, init: RequestInit =
       401: "Your session is missing or expired. Sign in again.",
       403: "Your account is not assigned to a Ghost workspace.",
       404: "This profile is not available in your workspace.",
-      409: "A profile with this ID already exists.",
+      409: "This profile conflicts with an existing record or newer edit. Refresh and try again.",
       422: "Some profile fields are invalid.",
       503: "Profile storage or authentication is temporarily unavailable.",
     };

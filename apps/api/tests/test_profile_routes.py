@@ -145,3 +145,32 @@ def test_profile_update_lookup_database_failure_returns_503(client: TestClient) 
     )
     assert response.status_code == 503
     assert response.json()["detail"] == "Profile storage is temporarily unavailable"
+
+
+def test_profile_update_increments_version_and_rejects_stale_edit(client: TestClient) -> None:
+    created = client.post("/api/v1/profiles", json=payload())
+    assert created.status_code == 201
+    assert created.json()["profile_version"] == 1
+
+    first_update = client.patch(
+        "/api/v1/profiles/channel-1",
+        json={"display_name": "Updated Name", "expected_profile_version": 1},
+    )
+    assert first_update.status_code == 200
+    assert first_update.json()["profile_version"] == 2
+
+    stale_update = client.patch(
+        "/api/v1/profiles/channel-1",
+        json={"display_name": "Stale Name", "expected_profile_version": 1},
+    )
+    assert stale_update.status_code == 409
+    assert stale_update.json()["detail"] == "Profile was changed by another request; refresh and retry"
+    current = client.get("/api/v1/profiles/channel-1")
+    assert current.json()["display_name"] == "Updated Name"
+    assert current.json()["profile_version"] == 2
+
+
+def test_profile_update_rejects_client_managed_version_field(client: TestClient) -> None:
+    client.post("/api/v1/profiles", json=payload())
+    response = client.patch("/api/v1/profiles/channel-1", json={"profile_version": 99})
+    assert response.status_code == 422
