@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.compute_providers import (
     AdmissionError,
     ComputeRequest,
@@ -81,17 +83,18 @@ def test_no_provider_is_selected_if_local_cannot_run_and_kaggle_blocked():
     assert "insufficient" in reason
 
 
-def test_kaggle_timeout_command_is_bounded(monkeypatch):
+def test_kaggle_timeout_command_is_bounded(monkeypatch, tmp_path: Path):
     monkeypatch.setattr("app.compute_providers.shutil.which", lambda _: "/usr/bin/kaggle")
     adapter = KaggleCliAdapter()
-    command = adapter.build_push_command("owner/notebook", 600)
+    command = adapter.build_push_command(str(tmp_path), 600)
     assert command[-2:] == ["--timeout", "600"]
+    assert command[command.index("-p") + 1] == str(tmp_path.resolve())
 
 
-def test_kaggle_timeout_rejects_unbounded_value(monkeypatch):
+def test_kaggle_timeout_rejects_unbounded_value(monkeypatch, tmp_path: Path):
     monkeypatch.setattr("app.compute_providers.shutil.which", lambda _: "/usr/bin/kaggle")
     try:
-        KaggleCliAdapter().build_push_command("owner/notebook", 999999)
+        KaggleCliAdapter().build_push_command(str(tmp_path), 999999)
     except ValueError as exc:
         assert "between 60 and 21600" in str(exc)
     else:

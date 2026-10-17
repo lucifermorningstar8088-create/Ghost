@@ -76,16 +76,17 @@ class KaggleCliAdapter:
             return ProviderAvailability(self.provider, False, "Kaggle CLI is not installed")
         return ProviderAvailability(self.provider, True, "Credentials and CLI are present")
 
-    def build_push_command(self, kernel_ref: str, timeout_seconds: int) -> list[str]:
-        """Build a bounded-timeout command; caller must validate kernel_ref."""
+    def build_push_command(self, kernel_dir: str, timeout_seconds: int) -> list[str]:
+        """Build a bounded-timeout push command for an existing local kernel directory."""
         if not 60 <= timeout_seconds <= 21600:
             raise ValueError("timeout_seconds must be between 60 and 21600")
-        if not kernel_ref or len(kernel_ref) > 128 or any(c.isspace() for c in kernel_ref):
-            raise ValueError("kernel_ref must be a non-empty CLI-safe reference")
+        path = Path(kernel_dir).expanduser().resolve()
+        if not path.is_dir():
+            raise ValueError("kernel_dir must point to an existing directory")
         cli = shutil.which("kaggle")
         if not cli:
             raise AdmissionError("Kaggle CLI is not installed")
-        return [cli, "kernels", "push", "-p", kernel_ref, "--timeout", str(timeout_seconds)]
+        return [cli, "kernels", "push", "-p", str(path), "--timeout", str(timeout_seconds)]
 
     def status(self, kernel_ref: str, *, timeout_seconds: int = 20) -> str:
         """Read status with a subprocess deadline; unknown/error remains non-terminal."""
