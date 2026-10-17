@@ -18,7 +18,7 @@ Keep the API and frontend terminal windows open while using Ghost. If startup fa
 ## Database and secrets
 
 - Without `DATABASE_URL`, the API defaults to local SQLite when started from `apps/api`.
-- PostgreSQL requires a running server and valid connection settings. Review migrations and back up important data before applying them.
+- When `DATABASE_URL` is unset, `setup.bat` applies versioned migrations to local SQLite. If `DATABASE_URL` is set, setup skips remote migrations; back up the target and apply Alembic migrations explicitly after review.
 - Never put provider tokens, database passwords, OAuth secrets, or Supabase service-role keys in `VITE_*` variables or commit them to Git.
 - The Connection Center credential-storage foundation requires `GHOST_SECRET_ENCRYPTION_KEY`. See the connection guide before configuring it.
 
