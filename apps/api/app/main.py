@@ -16,6 +16,7 @@ from .profile_routes import router as profile_router
 from .compute_routes import router as compute_router, quota_router as compute_quota_router
 from .llm_routes import router as llm_router
 from .llm_task_routes import router as llm_task_router
+from .social_connections import router as social_connections_router
 
 app = FastAPI(
     title="Ghost API",
@@ -27,6 +28,7 @@ app.include_router(compute_router)
 app.include_router(compute_quota_router)
 app.include_router(llm_router)
 app.include_router(llm_task_router)
+app.include_router(social_connections_router)
 
 # Keep browser access explicit and configurable. Add the deployed web origin to GHOST_CORS_ORIGINS.
 _allowed_origins = [origin.strip() for origin in os.getenv("GHOST_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if origin.strip()]

@@ -56,7 +56,13 @@ The MagicPath-generated React/TypeScript UI is stored in `apps/web/src/component
 
 ### UI integration status
 
-This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. Backend API, secure secret storage, database migrations, OAuth callbacks, job events and real provider adapters remain separate implementation tasks. The repository contains a runnable React/Vite frontend shell and a FastAPI backend scaffold, but many operations-center panels still use demo data and the platform is not production-ready.
+This component is a front-end prototype. Seed jobs, provider health, worker status and comments are demo data. The UI does not claim that accounts are OAuth-connected, providers are live, Telegram alerts are delivered, or settings are persisted. The connection center now has an authenticated backend API and encrypted credential storage foundation. Full OAuth callbacks, account/page discovery, job events and remaining provider adapters are still separate implementation tasks. The repository contains a runnable React/Vite frontend shell and a FastAPI backend scaffold, but many operations-center panels still use demo data and the platform is not production-ready.
+
+## Channel & Pages Connection Center API
+
+The backend connection foundation supports tenant-scoped records for YouTube, Facebook Pages, Instagram, TikTok, X, Telegram and generic integrations. Credentials are encrypted server-side and never returned by the API. Configure `GHOST_SECRET_ENCRYPTION_KEY` using a generated Fernet key before saving credentials. See [Connection Center implementation status](docs/CHANNEL-PAGES-CONNECTION-CENTER.md) for API endpoints and provider limitations. Telegram and X have live verification adapters; other platforms remain explicitly unverified until their OAuth/discovery adapters are implemented. Saving credentials does not mean an account is connected.
+
+See [Connection Center setup, API endpoints, and known limitations](docs/CHANNEL-PAGES-CONNECTION-CENTER.md).
 
 ## Run the web UI locally
 

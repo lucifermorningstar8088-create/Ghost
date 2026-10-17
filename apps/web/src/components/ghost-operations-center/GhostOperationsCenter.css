@@ -474,3 +474,14 @@
   .g-auth-form button, .g-auth-action { width: 100%; }
   .g-pipeline-row { gap: 8px; }
 }
+
+
+/* Channel & Pages Connection Center feedback and form alignment. */
+.g-connection-center { min-width: 0; margin-bottom: 16px; }
+.g-connection-center .g-platform-choices { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g-connection-center .g-field { min-width: 0; }
+.g-connection-center .g-field input { width: 100%; min-width: 0; }
+.g-connection-center .g-error-message { color: #ffb4b4; font-size: 12px; overflow-wrap: anywhere; }
+.g-connection-center button:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 820px) { .g-connection-center .g-platform-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .g-connection-center .g-platform-choices { grid-template-columns: minmax(0, 1fr); } }
