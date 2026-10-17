@@ -43,3 +43,17 @@ Set `VITE_GHOST_API_URL` in the web app build environment to the API origin, wit
 - Supabase project URL / anon key are not PostgreSQL credentials. The PostgreSQL URI is used by the backend.
 - Switching database targets does not automatically copy data. Back up and perform an explicit migration/cutover.
 - The health endpoint reports status, not credentials or connection strings.
+
+
+## 5. Verify authenticated profile API
+
+Before connecting the Channels & Profiles screen to the live API, verify the API independently:
+
+1. Configure and verify the database as above, then apply Alembic migrations.
+2. Configure the backend-only Supabase Auth settings described in [API authentication](../apps/api/docs/AUTHENTICATION.md).
+3. Ensure the authenticated test user has a trusted server-assigned `app_metadata.tenant_id`. Do not assign tenant membership from browser-provided metadata.
+4. Obtain a valid access token through your configured Supabase sign-in flow and send it as `Authorization: Bearer <access-token>` to `/api/v1/profiles`.
+5. Test create/list/read/update/delete with a non-production test profile. Verify that a second tenant cannot read or mutate it.
+6. Keep access tokens in memory or an approved secure auth flow. Never commit tokens, database URIs, or service-role keys.
+
+The current web canvas still uses local preview state for channel profiles; the backend API is implemented separately and the live OAuth/account authorization flow is not yet connected. A successful database readiness check alone does not mean profile UI persistence or social-platform publishing is live.
