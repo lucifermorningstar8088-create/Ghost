@@ -40,7 +40,7 @@ if errorlevel 1 (
   exit /b 1
 )
 node --version
-npm --version
+call npm --version
 
 if not exist "scripts\windows\setup-ghost.ps1" (
   echo [ERROR] Required setup script is missing: scripts\windows\setup-ghost.ps1
