@@ -112,9 +112,11 @@ def test_database_session_uses_local_sqlite_when_database_url_is_unset(
         return lambda: DummySession()
 
     monkeypatch.setattr(profile_routes, "_session_factory", fake_factory)
-    session = next(profile_routes.get_db_session())
+    generator = profile_routes.get_db_session()
+    session = next(generator)
     assert isinstance(session, DummySession)
     assert captured == ["sqlite+pysqlite:///./ghost.db"]
+    generator.close()
 
 
 
