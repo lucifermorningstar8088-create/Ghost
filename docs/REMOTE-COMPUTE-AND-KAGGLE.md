@@ -60,6 +60,23 @@ Failure paths: retry_wait, failed, cancelled, quota_blocked, needs_attention. St
 4. Compute dashboard: live jobs, usage estimates, quota freshness, logs and checkpoint/artifact links.
 5. Additional authorized providers: one adapter at a time, with provider-specific billing, terms, tests and budget controls.
 
+## Optional Kaggle API and local-hardware fallback
+
+Kaggle credentials are optional. Ghost must remain usable when no Kaggle API credentials are configured.
+
+Selection policy:
+
+1. If a Kaggle pool is configured, credentials are present, the pool is explicitly enabled, quota is fresh/verified, and budget/concurrency checks pass, prefer Kaggle first for compatible GPU workloads.
+2. If Kaggle credentials are absent, use the local hardware adapter for tasks that fit the machine's available CPU/RAM/GPU resources. Do not attempt a Kaggle API call or block local jobs waiting for credentials.
+3. If Kaggle is configured but disabled, quota is unknown/stale, the quota/budget gate fails, or the provider is unavailable, do not launch on Kaggle. Route to local hardware only if the task fits local capacity; otherwise queue it and explain the blocker.
+4. Never silently switch to a paid provider. Any paid alternative requires explicit authorization.
+5. Detect local CPU/RAM and, where supported, local GPU availability at runtime. Do not assume a GPU exists. If local hardware is insufficient, fail admission with a clear resource message rather than starting an impossible job.
+6. Every remote Kaggle run must have a maximum runtime and use the documented Kaggle CLI timeout option. Workloads should exit naturally on completion, then Ghost verifies remote status. If remote termination cannot be verified, mark `needs_attention` and retain the budget reservation.
+
+This policy is routing intent only; it does not mean a live Kaggle or local GPU execution adapter is already implemented. Keep provider launch disabled until adapters and acceptance tests are merged.
+
+See [Kaggle Runtime Stop Guard](KAGGLE-RUNTIME-STOP-GUARD.md) for runtime limits, stop verification, and failure handling.
+
 ## References
 
 - Kaggle notebooks: https://www.kaggle.com/docs/notebooks
