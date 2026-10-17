@@ -26,11 +26,16 @@ $Pip = Join-Path $Venv "Scripts/pip.exe"
 
 Write-Host "Installing API dependencies..." -ForegroundColor Cyan
 & $Python -m pip install --upgrade pip
+if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed with exit code $LASTEXITCODE." }
 & $Pip install -r (Join-Path $ApiDir "requirements.txt")
+if ($LASTEXITCODE -ne 0) { throw "API dependency installation failed with exit code $LASTEXITCODE." }
 
 Write-Host "Installing web dependencies..." -ForegroundColor Cyan
 Push-Location $WebDir
-try { npm install } finally { Pop-Location }
+try {
+  npm install
+  if ($LASTEXITCODE -ne 0) { throw "Web dependency installation failed with exit code $LASTEXITCODE." }
+} finally { Pop-Location }
 
 $WebEnv = Join-Path $WebDir ".env.local"
 if (-not (Test-Path $WebEnv)) {
