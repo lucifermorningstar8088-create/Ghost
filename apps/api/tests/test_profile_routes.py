@@ -39,7 +39,6 @@ def payload(profile_id: str = "channel-1") -> dict:
         "connected_account_id": "account-1",
         "platform": "youtube",
         "display_name": "History Hindi",
-        "profile_version": 1,
         "profile_data": {"language": "Hindi", "format": "shorts"},
     }
 
@@ -80,9 +79,14 @@ def test_client_cannot_choose_tenant_or_read_another_tenant(client: TestClient) 
     assert client.delete("/api/v1/profiles/channel-1").status_code == 404
 
 
-def test_profile_requires_supported_platform_and_valid_version(client: TestClient) -> None:
+def test_profile_requires_supported_platform_and_server_managed_version(client: TestClient) -> None:
     assert client.post("/api/v1/profiles", json={**payload(), "platform": "unsupported"}).status_code == 422
-    assert client.post("/api/v1/profiles", json={**payload(), "profile_version": 0}).status_code == 422
+    # Version is assigned by the API, so even a plausible client-supplied value is rejected.
+    assert client.post("/api/v1/profiles", json={**payload(), "profile_version": 7}).status_code == 422
+
+    created = client.post("/api/v1/profiles", json=payload("server-versioned"))
+    assert created.status_code == 201
+    assert created.json()["profile_version"] == 1
 
 
 def test_profile_endpoints_require_authentication_when_not_overridden(client: TestClient) -> None:
