@@ -63,3 +63,17 @@ def test_cors_preflight_allows_profile_crud_methods() -> None:
         assert response.status_code == 200
         assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
         assert method in response.headers["access-control-allow-methods"]
+
+
+def test_migration_status_reports_revision_without_applying_migrations(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+
+    response = client.get("/health/migrations")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] in {"not_initialized", "pending", "up_to_date", "multiple_heads"}
+    assert isinstance(payload["head_revisions"], list)
+    assert payload["migration_required"] in {True, False}
+    assert "DATABASE_URL" not in response.text
+    assert "PASSWORD" not in response.text
