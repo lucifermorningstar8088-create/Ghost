@@ -75,3 +75,22 @@ class ComputeQuotaState(Base):
     reserved_hours: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="operator_confirmed")
+
+
+
+class ComputeBudgetReservation(Base):
+    """Idempotent per-job reservation; retained until remote completion is reconciled."""
+
+    __tablename__ = "compute_budget_reservations"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "job_id", name="uq_compute_reservation_tenant_job"),
+        CheckConstraint("reserved_hours > 0", name="ck_compute_reservation_hours_positive"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    pool_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    job_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    reserved_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="reserved")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
