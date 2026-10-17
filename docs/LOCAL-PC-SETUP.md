@@ -27,7 +27,7 @@ No Docker, Supabase project, API provider key, or PostgreSQL server is required 
    .\scripts\windows\setup-ghost.ps1
    ~~~
 
-The setup creates apps/api/.venv, installs the API requirements, installs web packages, and creates apps/web/.env.local from the example if missing. It does not overwrite an existing local env file, run schema migrations, or add cloud credentials.
+The setup creates apps/api/.venv, installs the API requirements, applies Alembic migrations to the local SQLite database when `DATABASE_URL` is unset, installs web packages, and creates apps/web/.env.local from the example if missing. It does not overwrite an existing local env file or add cloud credentials. If `DATABASE_URL` is set, setup deliberately skips migrations for that configured database; back it up and apply migrations explicitly after reviewing the target.
 
 ## Start the app
 
