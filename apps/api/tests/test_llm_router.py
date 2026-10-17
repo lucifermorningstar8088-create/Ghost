@@ -165,3 +165,27 @@ def test_error_does_not_echo_secret(monkeypatch):
     with pytest.raises(LLMRoutingError) as exc:
         router.chat([{"role": "user", "content": "hello"}])
     assert "do-not-leak" not in str(exc.value)
+
+
+
+def test_health_metadata_does_not_expose_secrets(monkeypatch):
+    monkeypatch.setenv("PRIMARY_KEY", "super-secret-value")
+    router = LLMFailoverRouter([provider("primary", fast=True)])
+    router.registry.failure("primary", now=100)
+    rows = router.health()
+    assert rows == [{
+        "provider": "primary",
+        "models_configured": 1,
+        "priority": 100,
+        "fast": True,
+        "credential_configured": True,
+        "circuit_available": False,
+        "timeout_seconds": 3,
+    }]
+    assert "super-secret-value" not in repr(rows)
+
+
+def test_health_reports_missing_credentials_without_network_calls(monkeypatch):
+    monkeypatch.delenv("PRIMARY_KEY", raising=False)
+    router = LLMFailoverRouter([provider("primary")])
+    assert router.health()[0]["credential_configured"] is False
