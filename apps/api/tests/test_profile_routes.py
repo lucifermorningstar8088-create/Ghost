@@ -211,3 +211,28 @@ def test_profile_update_conflicts_if_database_version_changes_after_read(client:
     current = client.get("/api/v1/profiles/channel-1").json()
     assert current["display_name"] == "Concurrent Winner"
     assert current["profile_version"] == 2
+
+
+
+@pytest.mark.parametrize(
+    "patch_payload",
+    [
+        {},
+        {"display_name": None},
+        {"profile_data": None},
+        {"display_name": None, "profile_data": None},
+        {"display_name": None, "expected_profile_version": 1},
+    ],
+)
+def test_profile_update_rejects_empty_or_null_only_changes(
+    client: TestClient, patch_payload: dict
+) -> None:
+    created = client.post("/api/v1/profiles", json=payload())
+    assert created.status_code == 201
+
+    response = client.patch("/api/v1/profiles/channel-1", json=patch_payload)
+    assert response.status_code == 422
+
+    current = client.get("/api/v1/profiles/channel-1").json()
+    assert current["display_name"] == "History Hindi"
+    assert current["profile_version"] == 1
