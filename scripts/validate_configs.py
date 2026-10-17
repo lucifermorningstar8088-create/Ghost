@@ -128,18 +128,37 @@ def validate_tool_registry(path: Path) -> tuple[int, int]:
     return len(capabilities), len(implementations)
 
 
+def validate_compute_pools(schema_path: Path, fixture_path: Path) -> int:
+    schema = load_json(schema_path)
+    Draft202012Validator.check_schema(schema)
+    payload = load_yaml(fixture_path)
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    errors = sorted(validator.iter_errors(payload), key=lambda error: list(error.absolute_path))
+    if errors:
+        details = "; ".join(
+            f"{'.'.join(map(str, error.absolute_path)) or '<root>'}: {error.message}"
+            for error in errors
+        )
+        raise ConfigValidationError(f"{fixture_path.relative_to(ROOT)} fails {schema_path.name}: {details}")
+
+    pools = payload["pools"]
+    ensure_unique(pools, "pool_id", "compute pools")
+    kaggle_pools = [pool for pool in pools if pool["provider"] == "kaggle"]
+    account_limit = payload["policy"]["kaggle_account_limit"]
+    if len(kaggle_pools) > account_limit:
+        raise ConfigValidationError(
+            f"compute pool config has {len(kaggle_pools)} Kaggle pools; policy permits {account_limit}"
+        )
+    for pool in kaggle_pools:
+        if pool["max_parallel_jobs"] != 1:
+            raise ConfigValidationError("Kaggle pool must run at most one job concurrently")
+    return len(pools)
+
+
 def main() -> int:
     checks = [
-        (
-            ROOT / "config/channel-profile.schema.json",
-            ROOT / "config/channel-profiles.example.yaml",
-            "profiles",
-        ),
-        (
-            ROOT / "config/content-type.schema.json",
-            ROOT / "config/content-types.example.yaml",
-            "content_types",
-        ),
+        (ROOT / "config/channel-profile.schema.json", ROOT / "config/channel-profiles.example.yaml", "profiles"),
+        (ROOT / "config/content-type.schema.json", ROOT / "config/content-types.example.yaml", "content_types"),
     ]
 
     try:
@@ -162,6 +181,12 @@ def main() -> int:
                 raise ConfigValidationError(
                     f"content type {content_type['content_type_id']} references unknown owner_profile_id {owner}"
                 )
+
+        pool_count = validate_compute_pools(
+            ROOT / "config/compute-pool.schema.json",
+            ROOT / "config/compute-pools.example.yaml",
+        )
+        print(f"PASS config/compute-pool.schema.json + config/compute-pools.example.yaml ({pool_count} pools; Kaggle account policy enforced)")
 
         capability_count, implementation_count = validate_tool_registry(ROOT / "config/tools.yaml")
         print(f"PASS config/tools.yaml ({capability_count} capabilities, {implementation_count} proposed/configuration records)")
