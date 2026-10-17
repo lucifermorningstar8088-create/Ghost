@@ -8,7 +8,7 @@ $Python = Join-Path $ApiDir ".venv/Scripts/python.exe"
 if (-not (Test-Path $Python)) { throw "API virtual environment missing. Run setup-ghost.ps1 first." }
 if (-not (Test-Path (Join-Path $WebDir "node_modules"))) { throw "Web dependencies missing. Run setup-ghost.ps1 first." }
 
-$ApiCommand = "Set-Location '$ApiDir'; $env:PYTHONPATH='.'; & '$Python' -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
+$ApiCommand = "Set-Location '$ApiDir'; `$env:PYTHONPATH='.'; & '$Python' -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
 $WebCommand = "Set-Location '$WebDir'; npm run dev -- --host 127.0.0.1"
 
 Start-Process powershell -ArgumentList @("-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $ApiCommand)
