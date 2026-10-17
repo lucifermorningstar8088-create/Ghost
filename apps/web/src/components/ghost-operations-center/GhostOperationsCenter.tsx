@@ -524,7 +524,7 @@ export const GhostOperationsCenter = () => {
   const checkDatabaseHealth = async () => {
     setDbHealthLoading(true);
     try {
-      const apiBase = (import.meta.env.VITE_GHOST_API_URL || "http://localhost:8000").replace(/\\/$/, "");
+      const apiBase = (import.meta.env.VITE_GHOST_API_URL || "http://localhost:8000").replace(/\/$/, "");
       const response = await fetch(`${apiBase}/health/ready`, { headers: { Accept: "application/json" } });
       const payload = await response.json();
       setDbHealth(payload);
