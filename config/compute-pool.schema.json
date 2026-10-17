@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ghost Compute Pool Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy",
+    "pools"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default_deny",
+        "kaggle_account_limit",
+        "require_budget_before_launch",
+        "never_expose_credentials_to_browser"
+      ],
+      "properties": {
+        "default_deny": {
+          "const": true
+        },
+        "kaggle_account_limit": {
+          "const": 1
+        },
+        "require_budget_before_launch": {
+          "const": true
+        },
+        "never_expose_credentials_to_browser": {
+          "const": true
+        }
+      }
+    },
+    "pools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pool_id",
+          "provider",
+          "status",
+          "max_parallel_jobs",
+          "weekly_gpu_hours_budget",
+          "quota_tracking",
+          "credential_env_refs",
+          "capabilities"
+        ],
+        "properties": {
+          "pool_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{2,63}$"
+          },
+          "provider": {
+            "enum": [
+              "kaggle",
+              "local",
+              "github_actions",
+              "other_authorized_provider"
+            ]
+          },
+          "status": {
+            "enum": [
+              "proposed",
+              "configured",
+              "validated",
+              "enabled",
+              "disabled",
+              "degraded"
+            ]
+          },
+          "account_label": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "max_parallel_jobs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "weekly_gpu_hours_budget": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30
+          },
+          "quota_tracking": {
+            "enum": [
+              "manual",
+              "estimated",
+              "provider_verified"
+            ]
+          },
+          "credential_env_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+            },
+            "uniqueItems": true
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "training",
+                "inference",
+                "batch_processing",
+                "media_processing",
+                "evaluation"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "provider": {
+                  "const": "kaggle"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            },
+            "then": {
+              "properties": {
+                "max_parallel_jobs": {
+                  "maximum": 1
+                },
+                "weekly_gpu_hours_budget": {
+                  "maximum": 30
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minContains": 0,
+      "maxContains": 1,
+      "contains": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "const": "kaggle"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      }
+    }
+  }
+}

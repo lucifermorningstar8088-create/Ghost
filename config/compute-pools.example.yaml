@@ -1,0 +1,49 @@
+schema_version: 1
+policy:
+  default_deny: true
+  kaggle_account_limit: 1
+  require_budget_before_launch: true
+  never_expose_credentials_to_browser: true
+
+pools:
+  - pool_id: kaggle-primary
+    provider: kaggle
+    status: proposed
+    account_label: Primary authorized Kaggle account
+    max_parallel_jobs: 1
+    weekly_gpu_hours_budget: 28
+    quota_tracking: manual
+    credential_env_refs:
+      - KAGGLE_USERNAME
+      - KAGGLE_KEY
+    capabilities:
+      - training
+      - inference
+      - evaluation
+    notes: Example only. Verify live quota in Kaggle settings; this is not a live quota reading.
+
+  - pool_id: local-cpu
+    provider: local
+    status: proposed
+    max_parallel_jobs: 1
+    weekly_gpu_hours_budget: 0
+    quota_tracking: estimated
+    credential_env_refs: []
+    capabilities:
+      - batch_processing
+      - media_processing
+      - evaluation
+    notes: Use for lightweight tasks that do not need a remote GPU.
+
+  - pool_id: alternate-approved-compute
+    provider: other_authorized_provider
+    status: proposed
+    max_parallel_jobs: 1
+    weekly_gpu_hours_budget: 0
+    quota_tracking: provider_verified
+    credential_env_refs: []
+    capabilities:
+      - training
+      - inference
+      - batch_processing
+    notes: Enable only after implementing an adapter and documenting provider quota and billing.
