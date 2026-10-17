@@ -133,7 +133,14 @@ def update_channel_profile(
     user: AuthenticatedUser = Depends(get_current_user),
     session: Session = Depends(get_db_session),
 ) -> ChannelProfile:
-    profile = get_profile(session, user.tenant_id, profile_id)
+    try:
+        profile = get_profile(session, user.tenant_id, profile_id)
+    except SQLAlchemyError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile storage is temporarily unavailable",
+        ) from exc
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
     changes = payload.model_dump(exclude_unset=True)
