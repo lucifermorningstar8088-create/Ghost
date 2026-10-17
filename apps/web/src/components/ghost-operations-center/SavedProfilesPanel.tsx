@@ -152,7 +152,7 @@ export function SavedProfilesPanel() {
       const updated = await updateGhostProfile(session.access_token, profile.profile_id, {
         display_name: cleanName,
         platform: editPlatform,
-        profile_version: profile.profile_version + 1,
+        expected_profile_version: profile.profile_version,
         profile_data: {
           ...profile.profile_data,
           handle: editHandle.trim(),
