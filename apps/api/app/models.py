@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, UniqueConstraint, CheckConstraint
+from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, Text, UniqueConstraint, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -133,7 +133,7 @@ class SocialConnection(Base):
     label: Mapped[str] = mapped_column(String(120), nullable=False)
     method: Mapped[str] = mapped_column(String(16), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="needs_verification")
-    encrypted_credentials: Mapped[str] = mapped_column(__import__("sqlalchemy").Text(), nullable=False)
+    encrypted_credentials: Mapped[str] = mapped_column(Text(), nullable=False)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     permissions_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
