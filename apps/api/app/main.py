@@ -1,6 +1,10 @@
 """Truthful health and dependency-readiness endpoints for the Ghost API."""
 import os
+from pathlib import Path
 
+from alembic.config import Config
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -79,3 +83,56 @@ def readiness() -> JSONResponse:
             ),
         },
     )
+
+
+@app.get("/health/migrations", tags=["health"])
+def migration_status() -> JSONResponse:
+    """Report database and Alembic revision status without applying migrations."""
+    engine = None
+    try:
+        engine = build_engine(os.getenv("DATABASE_URL"))
+        api_root = Path(__file__).resolve().parent.parent
+        alembic_config = Config(str(api_root / "alembic.ini"))
+        alembic_config.set_main_option("script_location", str(api_root / "migrations"))
+        scripts = ScriptDirectory.from_config(alembic_config)
+        heads = scripts.get_heads()
+        with engine.connect() as connection:
+            current = MigrationContext.configure(connection).get_current_revision()
+        if current is None:
+            status = "not_initialized"
+        elif len(heads) != 1:
+            status = "multiple_heads"
+        elif current != heads[0]:
+            status = "pending"
+        else:
+            status = "up_to_date"
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": status,
+                "current_revision": current,
+                "head_revisions": heads,
+                "migration_required": status in {"not_initialized", "pending", "multiple_heads"},
+                "message": {
+                    "not_initialized": "No Alembic revision is recorded for this database.",
+                    "pending": "The database revision differs from the latest migration head.",
+                    "up_to_date": "The database matches the current migration head.",
+                    "multiple_heads": "Multiple migration heads exist; review the migration graph.",
+                }[status],
+            },
+        )
+    except (SQLAlchemyError, RuntimeError, OSError, ValueError):
+        # Do not include exception details: database driver errors can contain connection data.
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unavailable",
+                "current_revision": None,
+                "head_revisions": [],
+                "migration_required": None,
+                "message": "Could not read migration status. Check database connectivity and migration configuration.",
+            },
+        )
+    finally:
+        if engine is not None:
+            engine.dispose()
