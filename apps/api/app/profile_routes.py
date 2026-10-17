@@ -144,8 +144,8 @@ def update_channel_profile(
         raise HTTPException(status_code=404, detail="Profile not found")
     changes = payload.model_dump(exclude_unset=True)
     expected_version = changes.pop("expected_profile_version", None)
-    if not changes:
-        raise HTTPException(status_code=422, detail="At least one profile field must be provided")
+    if not changes or not any(value is not None for value in changes.values()):
+        raise HTTPException(status_code=422, detail="At least one non-null profile field must be provided")
     if expected_version is not None and expected_version != profile.profile_version:
         raise HTTPException(status_code=409, detail="Profile was changed by another request; refresh and retry")
 
