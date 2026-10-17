@@ -36,22 +36,19 @@ def liveness() -> dict[str, str]:
 
 @app.get("/health/ready", tags=["health"])
 def readiness() -> JSONResponse:
-    """Check configured database connectivity and report unconfigured integrations honestly."""
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        database_status = "not_configured"
-    else:
-        engine = None
-        try:
-            engine = build_engine(database_url)
-            with engine.connect() as connection:
-                connection.execute(text("SELECT 1"))
-            database_status = "ok"
-        except (SQLAlchemyError, RuntimeError):
-            database_status = "unavailable"
-        finally:
-            if engine is not None:
-                engine.dispose()
+    """Check the effective database connection, including the local SQLite default."""
+    engine = None
+    try:
+        # build_engine() applies DATABASE_URL when set and otherwise uses local SQLite.
+        engine = build_engine(os.getenv("DATABASE_URL"))
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        database_status = "ok"
+    except (SQLAlchemyError, RuntimeError):
+        database_status = "unavailable"
+    finally:
+        if engine is not None:
+            engine.dispose()
 
     checks = {
         "api": "ok",

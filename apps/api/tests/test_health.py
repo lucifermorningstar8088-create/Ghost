@@ -12,7 +12,7 @@ def test_liveness_reports_running_api() -> None:
     assert response.json() == {"status": "ok", "service": "ghost-api"}
 
 
-def test_readiness_reports_unconfigured_database_and_integrations(monkeypatch) -> None:
+def test_readiness_checks_local_sqlite_default_and_unconfigured_integrations(monkeypatch) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     response = client.get("/health/ready")
@@ -21,7 +21,7 @@ def test_readiness_reports_unconfigured_database_and_integrations(monkeypatch) -
     payload = response.json()
     assert payload["status"] == "degraded"
     assert payload["checks"]["api"] == "ok"
-    assert payload["checks"]["database"] == "not_configured"
+    assert payload["checks"]["database"] == "ok"
     assert payload["checks"]["social_platforms"] == "not_configured"
     assert payload["checks"]["provider_adapters"] == "not_configured"
     assert payload["checks"]["telegram"] == "not_configured"
