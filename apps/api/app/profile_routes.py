@@ -27,9 +27,9 @@ def _session_factory(database_url: str) -> sessionmaker[Session]:
 
 def get_db_session():
     """Open a request-scoped DB session from server-side DATABASE_URL."""
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise HTTPException(status_code=503, detail="Database is not configured")
+    # Match build_engine() and the documented local-first behavior: without
+    # DATABASE_URL, local installs use the same SQLite database as health checks.
+    database_url = os.getenv("DATABASE_URL") or "sqlite+pysqlite:///./ghost.db"
     session = _session_factory(database_url)()
     try:
         yield session
