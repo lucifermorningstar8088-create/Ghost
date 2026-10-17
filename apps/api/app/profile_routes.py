@@ -43,7 +43,6 @@ class ProfileCreate(BaseModel):
     connected_account_id: str = Field(min_length=1, max_length=128)
     platform: str = Field(pattern=r"^(youtube|facebook|instagram)$")
     display_name: str = Field(min_length=1, max_length=120)
-    profile_version: int = Field(default=1, ge=1)
     profile_data: dict[str, Any] = Field(default_factory=dict)
 
 
