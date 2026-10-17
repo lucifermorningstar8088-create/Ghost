@@ -171,7 +171,8 @@ def test_error_does_not_echo_secret(monkeypatch):
 def test_health_metadata_does_not_expose_secrets(monkeypatch):
     monkeypatch.setenv("PRIMARY_KEY", "super-secret-value")
     router = LLMFailoverRouter([provider("primary", fast=True)])
-    router.registry.failure("primary", now=100)
+    router.registry.failure("primary")
+    router.registry.failure("primary")
     rows = router.health()
     assert rows == [{
         "provider": "primary",
