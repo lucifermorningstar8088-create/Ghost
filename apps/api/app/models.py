@@ -94,3 +94,27 @@ class ComputeBudgetReservation(Base):
     reserved_hours: Mapped[float] = mapped_column(Float, nullable=False)
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="reserved")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class LLMTask(Base):
+    """Durable tenant-scoped LLM task intent; execution requires a separate worker."""
+
+    __tablename__ = "llm_tasks"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "idempotency_key", name="uq_llm_task_tenant_idempotency"),
+        CheckConstraint("attempts >= 0", name="ck_llm_task_attempts_nonnegative"),
+        CheckConstraint("max_attempts >= 1 AND max_attempts <= 5", name="ck_llm_task_max_attempts_range"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    task_id: Mapped[str] = mapped_column(String(36), nullable=False, unique=True, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="queued")
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    last_error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
