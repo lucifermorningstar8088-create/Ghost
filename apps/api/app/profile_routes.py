@@ -173,7 +173,8 @@ def update_channel_profile(
                 detail="Profile was changed by another request; refresh and retry",
             )
         session.commit()
-        updated_profile = get_profile(session, user.tenant_id, profile_id)
+        session.refresh(profile)
+        updated_profile = profile
     except HTTPException:
         raise
     except SQLAlchemyError as exc:
