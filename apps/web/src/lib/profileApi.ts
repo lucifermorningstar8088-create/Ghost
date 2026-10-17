@@ -26,10 +26,10 @@ export interface GhostProfileInput {
 }
 
 export interface GhostProfilePatch {
+  expected_profile_version?: number;
   connected_account_id?: string;
   platform?: GhostPlatform;
   display_name?: string;
-  profile_version?: number;
   profile_data?: Record<string, unknown>;
 }
 
