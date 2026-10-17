@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getCurrentSession, onSupabaseSessionChange } from "../../lib/supabaseAuth";
 import {
   createGhostProfile,
   deleteGhostProfile,
   listGhostProfiles,
+  updateGhostProfile,
   type GhostPlatform,
   type GhostProfile,
 } from "../../lib/profileApi";
@@ -33,16 +34,27 @@ export function SavedProfilesPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPlatform, setEditPlatform] = useState<GhostPlatform>("youtube");
+  const [editHandle, setEditHandle] = useState("");
+  const [editNiche, setEditNiche] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const requestSequence = useRef(0);
 
   const refresh = useCallback(async (accessToken: string) => {
+    const sequence = ++requestSequence.current;
     setLoading(true);
     setError("");
     try {
-      setProfiles(await listGhostProfiles(accessToken));
+      const result = await listGhostProfiles(accessToken);
+      if (sequence === requestSequence.current) setProfiles(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load saved profiles.");
+      if (sequence === requestSequence.current) {
+        setError(err instanceof Error ? err.message : "Could not load saved profiles.");
+      }
     } finally {
-      setLoading(false);
+      if (sequence === requestSequence.current) setLoading(false);
     }
   }, []);
 
@@ -50,11 +62,15 @@ export function SavedProfilesPanel() {
     let active = true;
     const applySession = (next: Session | null) => {
       if (!active) return;
+      requestSequence.current += 1;
       setSession(next);
       setProfiles([]);
+      setEditingId(null);
       setError("");
       setNotice("");
+      setLoading(Boolean(next?.access_token));
       if (next?.access_token) void refresh(next.access_token);
+      else setLoading(false);
     };
     void getCurrentSession().then(applySession).catch((err: unknown) => {
       if (active) setError(err instanceof Error ? err.message : "Could not read sign-in session.");
@@ -98,6 +114,49 @@ export function SavedProfilesPanel() {
       setError(err instanceof Error ? err.message : "Could not save profile.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function beginEdit(profile: GhostProfile) {
+    const data = profile.profile_data;
+    setEditingId(profile.profile_id);
+    setEditName(profile.display_name);
+    setEditPlatform(profile.platform);
+    setEditHandle(typeof data.handle === "string" ? data.handle : "");
+    setEditNiche(typeof data.niche === "string" ? data.niche : "");
+    setError("");
+    setNotice("");
+  }
+
+  async function saveEdit(event: FormEvent<HTMLFormElement>, profile: GhostProfile) {
+    event.preventDefault();
+    if (!session?.access_token || !editingId) return;
+    const cleanName = editName.trim();
+    if (!cleanName) {
+      setError("Profile name is required.");
+      return;
+    }
+    setUpdating(true);
+    setError("");
+    setNotice("");
+    try {
+      const updated = await updateGhostProfile(session.access_token, profile.profile_id, {
+        display_name: cleanName,
+        platform: editPlatform,
+        profile_version: profile.profile_version + 1,
+        profile_data: {
+          ...profile.profile_data,
+          handle: editHandle.trim(),
+          niche: editNiche.trim(),
+        },
+      });
+      setProfiles((current) => current.map((item) => item.profile_id === updated.profile_id ? updated : item));
+      setEditingId(null);
+      setNotice("Profile changes saved to the Ghost API.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update profile.");
+    } finally {
+      setUpdating(false);
     }
   }
 
@@ -149,13 +208,27 @@ export function SavedProfilesPanel() {
         const handleValue = typeof data.handle === "string" ? data.handle : "";
         const nicheValue = typeof data.niche === "string" ? data.niche : "";
         const connected = data.connection_status === "connected";
-        return <article key={profile.profile_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: 12, border: "1px solid #30333b", borderRadius: 9, flexWrap: "wrap" }}>
-          <div style={{ minWidth: 0, flex: "1 1 220px" }}>
-            <strong>{profile.display_name}</strong>
-            <div style={{ opacity: .72, fontSize: 12, marginTop: 4 }}>{profile.platform.toUpperCase()}{handleValue ? ` · ${handleValue}` : ""}{nicheValue ? ` · ${nicheValue}` : ""}</div>
-            <div style={{ fontSize: 12, marginTop: 5, color: connected ? "#9ee5bb" : "#f1c27d" }}>{connected ? "Account connected" : "Saved only · OAuth not connected"}</div>
-          </div>
-          <button type="button" onClick={() => void removeProfile(profile)} style={{ ...actionStyle, background: "transparent", borderColor: "#6d4141", color: "#ffb4b4" }}>Delete</button>
+        return <article key={profile.profile_id} style={{ display: "grid", gap: 10, padding: 12, border: "1px solid #30333b", borderRadius: 9 }}>
+          {editingId === profile.profile_id ? <form onSubmit={(event) => void saveEdit(event, profile)} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input aria-label="Edit profile name" required maxLength={120} value={editName} onChange={(event) => setEditName(event.target.value)} style={{ ...fieldStyle, flex: "1 1 180px" }} />
+            <select aria-label="Edit platform" value={editPlatform} onChange={(event) => setEditPlatform(event.target.value as GhostPlatform)} style={fieldStyle}>
+              <option value="youtube">YouTube</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option>
+            </select>
+            <input aria-label="Edit handle" maxLength={120} placeholder="Handle" value={editHandle} onChange={(event) => setEditHandle(event.target.value)} style={{ ...fieldStyle, flex: "1 1 140px" }} />
+            <input aria-label="Edit niche" maxLength={160} placeholder="Niche" value={editNiche} onChange={(event) => setEditNiche(event.target.value)} style={{ ...fieldStyle, flex: "1 1 160px" }} />
+            <button type="submit" disabled={updating} style={{ ...actionStyle, opacity: updating ? .6 : 1 }}>{updating ? "Saving…" : "Save changes"}</button>
+            <button type="button" disabled={updating} onClick={() => setEditingId(null)} style={{ ...actionStyle, background: "transparent", borderColor: "#414550" }}>Cancel</button>
+          </form> : <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+              <strong>{profile.display_name}</strong>
+              <div style={{ opacity: .72, fontSize: 12, marginTop: 4 }}>{profile.platform.toUpperCase()}{handleValue ? ` · ${handleValue}` : ""}{nicheValue ? ` · ${nicheValue}` : ""}</div>
+              <div style={{ fontSize: 12, marginTop: 5, color: connected ? "#9ee5bb" : "#f1c27d" }}>{connected ? "Account connected" : "Saved only · OAuth not connected"}</div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" onClick={() => beginEdit(profile)} style={{ ...actionStyle, background: "transparent", borderColor: "#414550" }}>Edit</button>
+              <button type="button" onClick={() => void removeProfile(profile)} style={{ ...actionStyle, background: "transparent", borderColor: "#6d4141", color: "#ffb4b4" }}>Delete</button>
+            </div>
+          </div>}
         </article>;
       })}
     </div>}
