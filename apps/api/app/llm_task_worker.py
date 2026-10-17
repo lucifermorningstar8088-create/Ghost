@@ -40,6 +40,7 @@ def process_one(session_factory, router: LLMFailoverRouter) -> bool:
         task_id = task.task_id
         payload = dict(task.payload)
         max_attempts = task.max_attempts
+        attempt_number = task.attempts
         session.commit()
 
     # The request fingerprint is internal idempotency metadata, not a model input.
@@ -62,12 +63,12 @@ def process_one(session_factory, router: LLMFailoverRouter) -> bool:
         # Store a bounded category, never raw upstream exception text or credentials.
         safe_result = None
         error_code = "provider_unavailable" if isinstance(exc, LLMRoutingError) else "invalid_task_payload"
-        status_value = "queued" if isinstance(exc, LLMRoutingError) and _attempt_count(session_factory, task_id) < max_attempts else "failed"
+        status_value = "queued" if isinstance(exc, LLMRoutingError) and attempt_number < max_attempts else "failed"
         logger.warning("LLM task %s ended with safe error code %s", task_id, error_code)
     except Exception:
         safe_result = None
         error_code = "internal_worker_error"
-        status_value = "queued" if _attempt_count(session_factory, task_id) < max_attempts else "failed"
+        status_value = "queued" if attempt_number < max_attempts else "failed"
         logger.exception("LLM task %s encountered an unexpected worker error", task_id)
 
     with session_factory() as session:
@@ -79,13 +80,10 @@ def process_one(session_factory, router: LLMFailoverRouter) -> bool:
         task.result = safe_result
         task.updated_at = datetime.now(timezone.utc)
         session.commit()
+    if status_value == "queued":
+        # Exponential backoff capped at 60 seconds to avoid tight retry loops.
+        time.sleep(min(2 ** max(0, attempt_number - 1), 60))
     return True
-
-
-def _attempt_count(session_factory, task_id: str) -> int:
-    with session_factory() as session:
-        task = session.scalar(select(LLMTask).where(LLMTask.task_id == task_id))
-        return task.attempts if task else 999
 
 
 def main() -> None:
