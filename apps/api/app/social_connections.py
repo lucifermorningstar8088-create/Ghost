@@ -26,7 +26,7 @@ from .models import SocialConnection
 
 router = APIRouter(prefix="/api/v1/connections", tags=["social-connections"])
 PLATFORMS = {"youtube", "facebook", "instagram", "tiktok", "x", "telegram", "other"}
-_SECRET_FIELDS = {"access_token", "refresh_token", "bot_token", "api_key", "client_secret", "password", "token", "secret"}
+_SECRET_FIELDS = {"access_token", "refresh_token", "bearer_token", "bot_token", "api_key", "client_secret", "client_secret_key", "private_key", "password", "token", "secret", "signing_secret", "webhook_secret"}
 
 
 def _fernet() -> Fernet:
