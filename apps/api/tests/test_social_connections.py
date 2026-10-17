@@ -79,3 +79,21 @@ def test_unimplemented_provider_is_not_marked_connected(client: TestClient):
     tested = client.post(f"/api/v1/connections/{created['connection_id']}/test")
     assert tested.status_code == 501
     assert tested.json()["detail"].startswith("Live verification adapter is not implemented")
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        {"nested": {"access_token": "plaintext-secret"}},
+        {"settings": [{"refresh_token": "plaintext-secret"}]},
+        {"API_KEY": "plaintext-secret"},
+    ],
+)
+def test_metadata_rejects_nested_or_case_insensitive_secret_fields(client: TestClient, metadata):
+    response = client.post("/api/v1/connections", json={
+        "platform": "other",
+        "label": "Unsafe metadata",
+        "credentials": {"api_key": "encrypted-secret"},
+        "metadata": metadata,
+    })
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Put credentials in the credentials field, not metadata"
