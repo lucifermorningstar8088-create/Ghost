@@ -41,6 +41,7 @@ export function SavedProfilesPanel() {
   const [editNiche, setEditNiche] = useState("");
   const [updating, setUpdating] = useState(false);
   const requestSequence = useRef(0);
+  const sessionGeneration = useRef(0);
 
   const refresh = useCallback(async (accessToken: string) => {
     const sequence = ++requestSequence.current;
@@ -63,9 +64,12 @@ export function SavedProfilesPanel() {
     const applySession = (next: Session | null) => {
       if (!active) return;
       requestSequence.current += 1;
+      sessionGeneration.current += 1;
       setSession(next);
       setProfiles([]);
       setEditingId(null);
+      setSaving(false);
+      setUpdating(false);
       setError("");
       setNotice("");
       setLoading(Boolean(next?.access_token));
@@ -87,6 +91,7 @@ export function SavedProfilesPanel() {
     }
     const cleanName = name.trim();
     if (!cleanName) return;
+    const generation = sessionGeneration.current;
     setSaving(true);
     setError("");
     setNotice("");
@@ -105,15 +110,18 @@ export function SavedProfilesPanel() {
           source: "ghost_profile_manager",
         },
       });
+      if (generation !== sessionGeneration.current) return;
       setProfiles((current) => [created, ...current.filter((item) => item.profile_id !== created.profile_id)]);
       setName("");
       setHandle("");
       setNiche("");
       setNotice("Profile saved to the authenticated Ghost API. Social account authorization is still required.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save profile.");
+      if (generation === sessionGeneration.current) {
+        setError(err instanceof Error ? err.message : "Could not save profile.");
+      }
     } finally {
-      setSaving(false);
+      if (generation === sessionGeneration.current) setSaving(false);
     }
   }
 
@@ -136,6 +144,7 @@ export function SavedProfilesPanel() {
       setError("Profile name is required.");
       return;
     }
+    const generation = sessionGeneration.current;
     setUpdating(true);
     setError("");
     setNotice("");
@@ -150,27 +159,34 @@ export function SavedProfilesPanel() {
           niche: editNiche.trim(),
         },
       });
+      if (generation !== sessionGeneration.current) return;
       setProfiles((current) => current.map((item) => item.profile_id === updated.profile_id ? updated : item));
       setEditingId(null);
       setNotice("Profile changes saved to the Ghost API.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update profile.");
+      if (generation === sessionGeneration.current) {
+        setError(err instanceof Error ? err.message : "Could not update profile.");
+      }
     } finally {
-      setUpdating(false);
+      if (generation === sessionGeneration.current) setUpdating(false);
     }
   }
 
   async function removeProfile(profile: GhostProfile) {
     if (!session?.access_token) return;
     if (!window.confirm(`Delete saved profile "${profile.display_name}" from this workspace?`)) return;
+    const generation = sessionGeneration.current;
     setError("");
     setNotice("");
     try {
       await deleteGhostProfile(session.access_token, profile.profile_id);
+      if (generation !== sessionGeneration.current) return;
       setProfiles((current) => current.filter((item) => item.profile_id !== profile.profile_id));
       setNotice("Saved profile deleted.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete profile.");
+      if (generation === sessionGeneration.current) {
+        setError(err instanceof Error ? err.message : "Could not delete profile.");
+      }
     }
   }
 
