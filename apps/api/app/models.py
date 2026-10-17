@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, UniqueConstraint, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -53,3 +53,25 @@ class ComputeJob(Base):
     dry_run: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     job_spec: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+
+class ComputeQuotaState(Base):
+    """Operator/provider-confirmed quota and atomic budget reservation counters."""
+
+    __tablename__ = "compute_quota_states"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "pool_id", name="uq_compute_quota_tenant_pool"),
+        CheckConstraint("weekly_budget_hours >= 0", name="ck_compute_quota_budget_nonnegative"),
+        CheckConstraint("remaining_quota_hours >= 0", name="ck_compute_quota_remaining_nonnegative"),
+        CheckConstraint("reserved_hours >= 0", name="ck_compute_quota_reserved_nonnegative"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    pool_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    weekly_budget_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    remaining_quota_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    reserved_hours: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="operator_confirmed")
