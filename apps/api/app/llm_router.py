@@ -134,6 +134,21 @@ class LLMFailoverRouter:
         self.registry = registry or ProviderRegistry()
         self.client_factory = client_factory
 
+    def health(self) -> list[dict[str, Any]]:
+        """Return safe configuration/circuit-breaker metadata, not an active health guarantee."""
+        rows: list[dict[str, Any]] = []
+        for provider in self.providers:
+            rows.append({
+                "provider": provider.name,
+                "models_configured": len(provider.models),
+                "priority": provider.priority,
+                "fast": provider.fast,
+                "credential_configured": bool(os.getenv(provider.api_key_env)),
+                "circuit_available": self.registry.is_available(provider.name),
+                "timeout_seconds": provider.timeout_seconds,
+            })
+        return rows
+
     def chat(
         self,
         messages: list[dict[str, str]],
