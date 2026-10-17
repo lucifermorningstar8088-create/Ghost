@@ -19,7 +19,9 @@
         "default_deny",
         "kaggle_account_limit",
         "require_budget_before_launch",
-        "never_expose_credentials_to_browser"
+        "never_expose_credentials_to_browser",
+        "prefer_kaggle_when_configured",
+        "local_fallback_enabled"
       ],
       "properties": {
         "default_deny": {
@@ -32,6 +34,12 @@
           "const": true
         },
         "never_expose_credentials_to_browser": {
+          "const": true
+        },
+        "prefer_kaggle_when_configured": {
+          "const": true
+        },
+        "local_fallback_enabled": {
           "const": true
         }
       }
