@@ -95,6 +95,28 @@ def test_profile_endpoints_require_authentication_when_not_overridden(client: Te
     assert response.status_code == 401
 
 
+def test_database_session_uses_local_sqlite_when_database_url_is_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import app.profile_routes as profile_routes
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    captured: list[str] = []
+
+    class DummySession:
+        def close(self) -> None:
+            pass
+
+    def fake_factory(url: str):
+        captured.append(url)
+        return lambda: DummySession()
+
+    monkeypatch.setattr(profile_routes, "_session_factory", fake_factory)
+    session = next(profile_routes.get_db_session())
+    assert isinstance(session, DummySession)
+    assert captured == ["sqlite+pysqlite:///./ghost.db"]
+
+
 
 @pytest.mark.parametrize(
     ("method", "path"),
