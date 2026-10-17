@@ -72,7 +72,8 @@ echo Double-click run.bat to launch Ghost UI + API.
 echo UI:  http://127.0.0.1:5173
 echo API: http://127.0.0.1:8000
 echo.
-echo Setup does not apply database migrations or connect external accounts.
+echo Local SQLite migrations are applied during setup when DATABASE_URL is unset.
+echo Remote database migrations are skipped for safety.
 pause
 exit /b 0
 
