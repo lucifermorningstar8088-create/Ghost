@@ -86,6 +86,8 @@ def test_unimplemented_provider_is_not_marked_connected(client: TestClient):
         {"nested": {"access_token": "plaintext-secret"}},
         {"settings": [{"refresh_token": "plaintext-secret"}]},
         {"API_KEY": "plaintext-secret"},
+        {"integrations": {"bearer_token": "plaintext-secret"}},
+        {"webhook_secret": "plaintext-secret"},
     ],
 )
 def test_metadata_rejects_nested_or_case_insensitive_secret_fields(client: TestClient, metadata):
