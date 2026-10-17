@@ -62,7 +62,7 @@ def enqueue_llm_task(
     session: Session = Depends(get_db_session),
 ) -> LLMTask:
     """Persist a task request once; execution is intentionally delegated to a future worker."""
-    payload_data = payload.model_dump(mode="json", exclude={"max_attempts"})
+    payload_data = payload.model_dump(mode="json")
     fingerprint = _payload_hash(payload_data)
     stored_payload = {**payload_data, "_request_fingerprint": fingerprint}
     existing = session.scalar(select(LLMTask).where(
