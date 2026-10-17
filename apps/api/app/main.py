@@ -121,7 +121,7 @@ def migration_status() -> JSONResponse:
                 }[status],
             },
         )
-    except (SQLAlchemyError, RuntimeError, OSError, ValueError) as exc:
+    except (SQLAlchemyError, RuntimeError, OSError, ValueError):
         # Do not include exception details: database driver errors can contain connection data.
         return JSONResponse(
             status_code=503,
